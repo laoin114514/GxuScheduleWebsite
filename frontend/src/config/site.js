@@ -86,13 +86,17 @@ export const features = [
   },
 ]
 
-/** 5 套 M3 主题预设，与 App 内 6 套配色方案对齐（官网展示 5 套） */
+/**
+ * 5 套 M3 主题预设。
+ * brand / brandDark / onPrimaryDark 均取自 App M3Palettes.kt 的 LIGHT_PALETTES / DARK_PALETTES，
+ * 保证手机模型里的强调色（顶栏日期、今日高亮、底部导航选中）与真机一致。
+ */
 export const themePresets = [
-  { key: 'purple', label: '经典紫', brand: '#6750A4', dot: '#6750A4', colors: ['#6750A4', '#5E35B1', '#7D5260', '#EF6C00', '#C2185B'] },
-  { key: 'ocean', label: '海洋蓝', brand: '#4A90E2', dot: '#1565C0', colors: ['#4A90E2', '#1565C0', '#00695C', '#EF6C00', '#C2185B'] },
-  { key: 'teal', label: '青绿', brand: '#00695C', dot: '#00695C', colors: ['#00695C', '#00897B', '#2E7D32', '#1565C0', '#E65100'] },
-  { key: 'amber', label: '暖棕', brand: '#EF6C00', dot: '#EF6C00', colors: ['#EF6C00', '#F57C00', '#6D4C41', '#1565C0', '#5E35B1'] },
-  { key: 'rose', label: '玫红', brand: '#C2185B', dot: '#C2185B', colors: ['#C2185B', '#AD1457', '#6750A4', '#00695C', '#EF6C00'] },
+  { key: 'purple', label: '经典紫', brand: '#6750A4', brandDark: '#D0BCFF', onPrimaryDark: '#381E72', dot: '#6750A4', colors: ['#6750A4', '#5E35B1', '#7D5260', '#EF6C00', '#C2185B'] },
+  { key: 'ocean', label: '海洋蓝', brand: '#1565C0', brandDark: '#AAC7FF', onPrimaryDark: '#002F5C', dot: '#1565C0', colors: ['#2979FF', '#1565C0', '#00695C', '#EF6C00', '#C2185B'] },
+  { key: 'teal', label: '青绿', brand: '#006A60', brandDark: '#5CDBCB', onPrimaryDark: '#003730', dot: '#006A60', colors: ['#1DE9B6', '#00695C', '#2E7D32', '#1565C0', '#E65100'] },
+  { key: 'amber', label: '暖棕', brand: '#8D5000', brandDark: '#FFB870', onPrimaryDark: '#4B2800', dot: '#8D5000', colors: ['#EF6C00', '#F57C00', '#6D4C41', '#1565C0', '#5E35B1'] },
+  { key: 'rose', label: '玫红', brand: '#B0005C', brandDark: '#FFB0CB', onPrimaryDark: '#650033', dot: '#B0005C', colors: ['#C2185B', '#AD1457', '#6750A4', '#00695C', '#EF6C00'] },
 ]
 
 export const tools = [

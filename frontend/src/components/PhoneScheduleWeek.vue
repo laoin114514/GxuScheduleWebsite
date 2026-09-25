@@ -1,96 +1,151 @@
 <template>
-  <div class="p-4 pt-9 text-[12px] h-full flex flex-col justify-between" :class="variant === 'hero' ? 'p-3.5' : ''">
-    <div>
-      <div class="flex items-center justify-between pb-2 border-b border-slate-200/70 dark:border-slate-800">
-        <div class="flex items-center space-x-1.5">
-          <span class="font-bold text-sm text-slate-900 dark:text-white">{{ data.title }}</span>
-          <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-medium">
-            {{ data.badge }}
-          </span>
+  <!-- 按 App「周课表」页 1:1 还原：360dp 逻辑画布 + transform 缩放到手机模型宽度 -->
+  <div ref="host" class="app-screen-host">
+    <div class="app-screen" :style="screenStyle">
+      <!-- 顶栏 -->
+      <div class="app-header">
+        <div class="app-header-main">
+          <div class="app-week-info">{{ week.weekInfo }}</div>
+          <div class="app-date">{{ week.date }}</div>
         </div>
-        <div v-if="variant === 'hero'" class="flex items-center space-x-2 text-slate-500">
-          <span class="text-[11px] font-mono">{{ data.meta }}</span>
-          <IconDotsVertical class="w-3.5 h-3.5" />
-        </div>
-        <span v-else class="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">{{ data.connected }}</span>
+        <div class="app-circle-btn"><IconRefresh /></div>
+        <div class="app-circle-btn"><IconDotsVertical /></div>
       </div>
 
-      <div class="grid grid-cols-5 text-center py-2 text-[10px] text-slate-500 font-medium border-b border-slate-200/50 dark:border-slate-800/60">
-        <div v-for="day in data.weekdays" :key="day.label" :class="day.today ? 'text-blue-600 dark:text-blue-400 font-bold' : ''">
-          {{ day.label }}<br />
-          <span class="text-[9px]" :class="day.today ? '' : 'text-slate-400'">{{ day.date }}</span>
+      <!-- 日期栏：周几 + 日期 -->
+      <div class="app-daterow">
+        <div class="app-year-cell"><span class="app-year-label">年</span></div>
+        <div v-for="day in week.days" :key="'w' + day.label" class="app-weekday">{{ day.label }}</div>
+      </div>
+      <div class="app-daterow">
+        <div class="app-year-cell"><span class="app-year-value">{{ week.year }}</span></div>
+        <div v-for="day in week.days" :key="'d' + day.label" class="app-date-cell">
+          <span class="app-date-num" :class="{ 'is-today': day.today }">{{ day.date }}</span>
         </div>
       </div>
-    </div>
 
-    <div class="grid grid-cols-5 gap-1.5 my-2 flex-grow overflow-hidden relative">
-      <div
-        v-for="(column, columnIndex) in data.columns"
-        :key="columnIndex"
-        class="space-y-1.5"
-        :class="columnIndex === todayIndex ? todayClass : ''"
-      >
-        <template v-for="(block, blockIndex) in column" :key="blockIndex">
-          <div v-if="block.empty" :style="{ height: block.h + 'px' }"></div>
-          <div
-            v-else
-            class="course-card-m3 text-white transition-all duration-300 relative"
-            :class="block.ring ? 'shadow-sm ring-1 ring-white/40' : ''"
-            :style="cardStyle(block)"
-          >
-            <span
-              v-if="block.overlap"
-              class="absolute top-1 right-1 rounded-full bg-amber-400 ring-2 ring-white text-slate-900 font-bold flex items-center justify-center"
-              :class="variant === 'hero' ? 'w-2.5 h-2.5 text-[7px]' : 'w-3 h-3 text-[7.5px]'"
-            >{{ block.overlap }}</span>
-
-            <div class="flex items-center justify-between">
-              <span class="font-bold text-[10.5px]">{{ block.title }}</span>
-              <span v-if="block.badge" class="text-[7.5px] px-1 bg-white/20 rounded">{{ block.badge }}</span>
-            </div>
-            <div v-if="block.room" class="text-[9px] opacity-90 mt-1">{{ block.room }}</div>
-            <div v-if="block.slot" class="text-[8px] opacity-75 mt-0.5">{{ block.slot }}</div>
+      <!-- 课表网格：节次轴 + 7 天 -->
+      <div class="app-grid">
+        <div class="app-axis">
+          <div v-for="period in periods" :key="period.node" class="app-axis-cell">
+            <span class="app-axis-node">{{ period.node }}</span>
+            <span class="app-axis-time">{{ period.start }}</span>
+            <span class="app-axis-time">{{ period.end }}</span>
           </div>
-        </template>
-      </div>
-    </div>
+        </div>
 
-    <div v-if="variant === 'hero'" class="pt-2 border-t border-slate-200/50 dark:border-slate-800/80 flex items-center justify-around text-slate-400 text-[10px]">
-      <div class="text-[#4A90E2] font-semibold flex flex-col items-center">
-        <IconGridNav class="w-4 h-4" /><span>课表</span>
+        <div class="app-days">
+          <!-- 虚线网格 -->
+          <div v-for="column in 7" :key="'c' + column" class="app-day">
+            <div v-for="period in periods" :key="'g' + period.node" class="app-cell"></div>
+          </div>
+
+          <!-- 课程卡片 -->
+          <div
+            v-for="(course, index) in week.courses"
+            :key="'k' + index"
+            class="app-course"
+            :style="cardStyle(course)"
+          >
+            <span>{{ courseText(course) }}</span>
+            <span v-if="course.overlap" class="app-overlap">+{{ course.overlap }}</span>
+          </div>
+        </div>
       </div>
-      <div class="flex flex-col items-center"><IconToolsNav class="w-4 h-4" /><span>工具</span></div>
-      <div class="flex flex-col items-center"><IconUserNav class="w-4 h-4" /><span>我的</span></div>
+
+      <!-- 底部导航 -->
+      <nav v-if="variant !== 'plain'" class="app-nav">
+        <div
+          v-for="tab in tabs"
+          :key="tab.key"
+          class="app-nav-item"
+          :class="{ 'is-active': tab.key === 'schedule' }"
+        >
+          <span class="app-nav-holder">
+            <span class="app-nav-circle"></span>
+            <component :is="tab.icon" class="app-nav-icon" />
+          </span>
+          <span class="app-nav-label">{{ tab.label }}</span>
+        </div>
+      </nav>
     </div>
-    <div v-else class="pt-2 text-center text-[10px] text-slate-400">{{ data.footer }}</div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import IconDotsVertical from './icons/IconDotsVertical.vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { layout, periods } from '../config/schedule'
+import IconCalendar from './icons/IconCalendar.vue'
 import IconGridNav from './icons/IconGridNav.vue'
-import IconToolsNav from './icons/IconToolsNav.vue'
 import IconUserNav from './icons/IconUserNav.vue'
+import IconRefresh from './icons/IconRefresh.vue'
+import IconDotsVertical from './icons/IconDotsVertical.vue'
 
 const props = defineProps({
-  data: { type: Object, required: true },
-  /** hero：首屏手机；interactive：课表展示区中间那台 */
-  variant: { type: String, default: 'hero' },
+  week: { type: Object, required: true },
+  /** full：带底部导航；plain：只保留课表（左右两侧的辅助手机用） */
+  variant: { type: String, default: 'full' },
 })
 
-const todayIndex = computed(() => props.data.weekdays.findIndex((day) => day.today))
+const tabs = [
+  { key: 'schedule', label: '课表', icon: IconCalendar },
+  { key: 'tools', label: '工具', icon: IconGridNav },
+  { key: 'profile', label: '我的', icon: IconUserNav },
+]
 
-const todayClass = computed(() =>
-  props.variant === 'hero'
-    ? 'bg-blue-50/40 dark:bg-blue-900/10 rounded-lg p-0.5'
-    : 'bg-blue-50/50 dark:bg-blue-900/20 rounded-lg p-0.5'
-)
+const host = ref(null)
+const scale = ref(1)
+const hostHeight = ref(0)
+let observer = null
 
-function cardStyle(block) {
-  return {
-    backgroundColor: block.hex || 'var(--course-c' + block.c + ')',
-    height: block.h + 'px',
+function measure() {
+  if (!host.value) return
+  // 必须用 offsetWidth/offsetHeight（布局尺寸，不受祖先 transform 影响）：
+  // 左右两侧的辅助手机带 rotate/scale，用 getBoundingClientRect 会被旋转后的包围盒带偏。
+  const width = host.value.offsetWidth
+  const height = host.value.offsetHeight
+  if (width > 0) scale.value = width / layout.baseWidth
+  hostHeight.value = height
+}
+
+onMounted(() => {
+  measure()
+  if (typeof ResizeObserver !== 'undefined') {
+    observer = new ResizeObserver(measure)
+    observer.observe(host.value)
+  } else {
+    window.addEventListener('resize', measure)
   }
+})
+
+onUnmounted(() => {
+  if (observer) observer.disconnect()
+  else window.removeEventListener('resize', measure)
+})
+
+const screenStyle = computed(() => {
+  const s = scale.value > 0 ? scale.value : 1
+  const height = hostHeight.value > 0 ? hostHeight.value / s : 1000
+  return { transform: 'scale(' + s + ')', height: height + 'px' }
+})
+
+/** 与 WeekPagerAdapter 一致：按节次定位，宽 = 1/7 列宽 - 间距，高 = 节数 * 格子高 - 间距 */
+function cardStyle(course) {
+  const columnWidth = 100 / 7
+  const gap = layout.gap
+  const top = (course.start - 1) * layout.cellHeight + gap
+  const height = (course.end - course.start + 1) * layout.cellHeight - gap * 2
+  return {
+    left: (course.day - 1) * columnWidth + '%',
+    width: 'calc(' + columnWidth + '% - ' + gap * 2 + 'px)',
+    top: top + 'px',
+    height: height + 'px',
+    backgroundColor: 'rgb(var(--course-c' + course.color + ') / var(--course-alpha))',
+  }
+}
+
+/** App 卡片文案：课程名 + 教室 + 教师，换行居中 */
+function courseText(course) {
+  return [course.name, course.room, course.teacher].filter(Boolean).join('\n')
 }
 </script>

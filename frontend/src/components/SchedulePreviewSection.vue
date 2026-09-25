@@ -26,19 +26,19 @@
     <div class="relative flex items-center justify-center py-6 overflow-hidden">
       <div class="hidden md:block transform -rotate-6 scale-90 opacity-60 hover:opacity-90 transition-all duration-300 -mr-16 z-0">
         <PhoneMockup :scale="0.92" :screenshot="shot('prev')" alt="上周课表">
-          <PhoneMiniWeek :data="miniPrevSchedule" />
+          <PhoneScheduleWeek :week="weeks.prev" variant="plain" />
         </PhoneMockup>
       </div>
 
       <div class="z-10 shadow-2xl rounded-[36px] transition-all duration-300 transform hover:scale-[1.02]">
         <PhoneMockup :width="310" :height="630" :screenshot="shot('schedule')" alt="课表周视图">
-          <PhoneScheduleWeek :data="interactiveSchedule" variant="interactive" />
+          <PhoneScheduleWeek :week="weeks.current" />
         </PhoneMockup>
       </div>
 
       <div class="hidden md:block transform rotate-6 scale-90 opacity-60 hover:opacity-90 transition-all duration-300 -ml-16 z-0">
         <PhoneMockup :scale="0.92" :screenshot="shot('next')" alt="下周课表">
-          <PhoneMiniWeek :data="miniNextSchedule" />
+          <PhoneScheduleWeek :week="weeks.next" variant="plain" />
         </PhoneMockup>
       </div>
     </div>
@@ -47,11 +47,10 @@
 
 <script setup>
 import { shot } from '../config/site'
-import { interactiveSchedule, miniNextSchedule, miniPrevSchedule } from '../config/schedule'
+import { weeks } from '../config/schedule'
 import { useThemePreset } from '../composables/useThemePreset'
 import PhoneMockup from './PhoneMockup.vue'
 import PhoneScheduleWeek from './PhoneScheduleWeek.vue'
-import PhoneMiniWeek from './PhoneMiniWeek.vue'
 
 const { presets, activeKey, select } = useThemePreset()
 </script>

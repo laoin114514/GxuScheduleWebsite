@@ -6,7 +6,7 @@
     <main>
       <HeroSection />
       <FeaturesSection />
-      <SchedulePreviewSection />
+      <!-- <SchedulePreviewSection /> -->
       <WidgetsSection />
       <ToolsSection />
       <AppearanceSection />

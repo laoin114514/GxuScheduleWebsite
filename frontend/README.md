@@ -27,7 +27,7 @@ frontend/
 ├─ public/
 │  ├─ logo.png                站点 Logo（取自 App 启动图标）
 │  ├─ favicon.png
-│  └─ screenshots/            真实截图占位目录（默认留空）
+│  └─ screenshots/            截图占位目录（含两张预生成的课表整屏图）
 ├─ design/
 │  ├─ stitch/                 Stitch 设计原稿（HTML + 效果图）
 │  └─ preview/                本实现的实际渲染截图
@@ -43,8 +43,8 @@ frontend/
    ├─ composables/            useTheme / useThemePreset / useCountdown / useRelease
    ├─ directives/reveal.js    v-reveal 滚动入场
    └─ components/
-      ├─ 11 个区块组件 + PhoneMockup / PhoneScheduleWeek / PhoneMiniWeek / ScreenshotSlot
-      └─ icons/               23 个 SVG 图标组件
+      ├─ 11 个区块组件 + PhoneMockup / PhoneScheduleWeek / ScreenshotSlot
+      └─ icons/               25 个 SVG 图标组件
 ```
 
 ## 快速开始
@@ -105,9 +105,41 @@ npm run preview    # 本地预览 dist/
 
 > 官网请求 `versionCode=0`，因此后端永远返回最新版本，无需与 App 上报口径对齐。
 
+## 手机模型里的课表（按真机 1:1 还原）
+
+首屏和「同一张课表，五种样子」里的课表界面不是图片，而是照着 App 源码复刻的 Vue 组件
+（[`PhoneScheduleWeek.vue`](src/components/PhoneScheduleWeek.vue)），结构与 `WeekPagerAdapter` 一一对应：
+
+| App 实现 | 官网还原 |
+|---|---|
+| 逻辑画布 360dp，实际宽度按屏幕换算 | `.app-screen` 固定 360px，用 `transform: scale()` 缩到手机模型宽度 |
+| 顶栏：`tv_week_info`（12sp）+ `tv_date`（18sp 粗体、colorPrimary）+ 两个 32dp 圆形按钮 | `.app-header` / `.app-date` / `.app-circle-btn` |
+| 日期栏：32dp 的「年 / 年份」列 + 7 列「一…日 / 月-日」；今天套 `bg_date_selected`（主色 + 4dp 圆角） | `.app-daterow` / `.app-date-num.is-today` |
+| 节次轴 32dp、每格 68dp：节次号（12sp 粗体）+ 开始 / 结束时间（10sp） | `.app-axis` / `.app-axis-cell` |
+| 7 等分日列，课程卡绝对定位：左 = (day-1)×列宽，上 = (start-1)×格子高，高 = 节数×格子高 | `cardStyle()` |
+| 卡片：圆角 + 2dp 白色描边 + 主题色 50%（深色 75%）半透明底 + 白色粗体居中「课程名 / 教室 / 教师」 | `.app-course` |
+| 同一天同一时段多门课 → 右下角 `+N` 角标 | `.app-overlap` |
+| 底部导航：激活项 = 40dp 圆形主色块 + 22dp 白图标 + 主色 10sp 文字 | `.app-nav` |
+| 13 节默认时间表（08:00~23:25） | `src/config/schedule.js` 的 `periods` |
+| 网格线 `gridColor = Color.TRANSPARENT`（**不画线**） | `--app-grid-line: transparent`，想开虚线网格只改这一个变量 |
+
+课程与配色数据都在 [`src/config/schedule.js`](src/config/schedule.js)：字段是
+`{ day, start, end, color, name, room, teacher, overlap? }`，`color` 取 1~5，
+对应当前主题预设的 5 个色彩槽位（真机是 9 色固定值，官网为了演示色板切换做了映射，
+见文件顶部注释）。三周示例数据是 `weeks.current / prev / next`。
+
 ## 真实截图怎么填
 
-页面**默认不需要任何图片**：课表、课程卡、桌面小组件、深浅色对照全部是 HTML/CSS 还原的，
+课表界面已按真机还原（见上一节），另外仓库里预生成了两张可直接使用的整屏图：
+
+- [`public/screenshots/schedule-light.png`](public/screenshots/schedule-light.png)（1080×2256）
+- [`public/screenshots/schedule-dark.png`](public/screenshots/schedule-dark.png)
+
+它们是上面那个组件的真实渲染结果（无头 Chrome 截的），可直接用于 README、商店页或分享图。
+想让官网手机模型改用它，把路径填进 `screenshots.schedule` 即可 —— 注意该槽位会因此变成静态图，
+失去「五种样子」的实时换色效果。
+
+其余位置仍然**默认不需要任何图片**：课表、课程卡、桌面小组件、深浅色对照全部是 HTML/CSS 还原的，
 开箱即完整。想换成真机截图时二选一：
 
 1. **改配置**：把图片放进 `public/screenshots/`，在 `src/config/site.js` 的 `screenshots` 里填相对路径；
@@ -172,3 +204,6 @@ server {
 | 依赖 | Tailwind CDN + 内联脚本 | 本地构建 + Vue 组件 | 可离线、可 tree-shake、可维护 |
 | Logo / 图标 | Google 临时图床链接 | 本地 App 图标 + 内置 SVG 组件 | 原链接会失效，且不应外链第三方 |
 | 版本号/体积/日志 | 写死 v1.7.6 / 16.8 MB | 接口获取，失败回退到静态值 | 发版后官网自动更新；体积按真实字节计算 |
+| 课表界面 | 5 列示意课表（虚构课程、没有节次轴） | 按真机 360dp 布局 1:1 还原：周次顶栏 + 日期栏 + 13 节次轴 + 7 天 + 底部导航 | 让手机模型看起来就是一张真机截图 |
+| 课程卡配色 | 写死 5 组主题色 | 真机 9 色固定 → 官网映射到当前主题的 5 个槽位 | 保住「五种样子」的实时换色演示 |
+| 网格线 | 设计稿画了虚线网格 | 不画（跟随真机 `Color.TRANSPARENT`） | 与当前版本 App 视觉一致 |

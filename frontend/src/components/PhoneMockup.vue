@@ -2,9 +2,11 @@
   <div class="phone-mockup" :style="frameStyle">
     <div class="phone-speaker"></div>
     <div class="phone-camera"></div>
-    <ScreenshotSlot :src="screenshot" :alt="alt" img-class="object-cover object-top">
-      <slot />
-    </ScreenshotSlot>
+    <div class="phone-screen">
+      <ScreenshotSlot :src="screenshot" :alt="alt" img-class="object-cover object-top">
+        <slot />
+      </ScreenshotSlot>
+    </div>
   </div>
 </template>
 
@@ -17,7 +19,7 @@ const props = defineProps({
   height: { type: [Number, String], default: 0 },
   scale: { type: [Number, String], default: 0 },
   screenshot: { type: String, default: '' },
-  alt: { type: String, default: '西大课栈界面截图' },
+  alt: { type: String, default: '西大课栈课表界面' },
 })
 
 const frameStyle = computed(() => {

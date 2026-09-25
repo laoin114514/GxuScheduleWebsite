@@ -55,8 +55,8 @@
 
       <div class="lg:col-span-5 flex justify-center relative">
         <div class="absolute -inset-4 bg-gradient-to-r from-blue-400/20 to-sky-300/20 rounded-full blur-2xl -z-10 dark:from-blue-600/10 dark:to-cyan-500/10"></div>
-        <PhoneMockup :screenshot="shot('hero')" alt="西大课栈课表周视图">
-          <PhoneScheduleWeek :data="heroSchedule" variant="hero" />
+        <PhoneMockup :screenshot="shot('hero')" alt="西大课栈周课表">
+          <PhoneScheduleWeek :week="weeks.current" />
         </PhoneMockup>
       </div>
     </div>
@@ -65,7 +65,7 @@
 
 <script setup>
 import { hero, links, shot } from '../config/site'
-import { heroSchedule } from '../config/schedule'
+import { weeks } from '../config/schedule'
 import PhoneMockup from './PhoneMockup.vue'
 import PhoneScheduleWeek from './PhoneScheduleWeek.vue'
 import IconDownload from './icons/IconDownload.vue'

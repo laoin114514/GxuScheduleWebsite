@@ -15,13 +15,29 @@
   --text-main: #1C1B1F;
   --text-sub: #49454F;
   --text-muted: #79747E;
-  --theme-active-color: #4A90E2;
-  --course-c1: #4A90E2;
-  --course-c2: #1565C0;
-  --course-c3: #00695C;
-  --course-c4: #EF6C00;
-  --course-c5: #C2185B;
+  --theme-active-color: #1565C0;
   --phone-screen-bg: #F0F4F8;
+
+  /* 手机模型里还原的 App 界面令牌（数值取自 App 源码） */
+  --screen-gradient: linear-gradient(180deg, #DAE6F0 0%, #F3F6FA 100%);
+  --app-status-bar: 26px;
+  --app-text: #1C1B1F;
+  --app-text-2: #49454F;
+  --app-primary: var(--app-primary-light, #1565C0);
+  --app-on-primary: #FFFFFF;
+  --app-circle-bg: rgba(255, 255, 255, 0.72);
+  --app-nav-bg: rgba(255, 255, 255, 0.5);
+  /* 当前 App 把网格线设成 Color.TRANSPARENT（不画线，见 WeekPagerAdapter:218），
+     这里保持一致；想要虚线网格就改成 rgba(0, 0, 0, 0.12) */
+  --app-grid-line: transparent;
+  --course-alpha: 0.5;
+
+  /* 课程卡配色：存 "r g b"，由 useThemePreset 按主题预设覆盖 */
+  --course-c1: 41 121 255;
+  --course-c2: 21 101 192;
+  --course-c3: 0 105 92;
+  --course-c4: 239 108 0;
+  --course-c5: 194 24 91;
 }
 
 html.dark {
@@ -34,6 +50,16 @@ html.dark {
   --text-sub: #A0AEC0;
   --text-muted: #718096;
   --phone-screen-bg: #141B26;
+
+  --screen-gradient: linear-gradient(180deg, #1A2433 0%, #0D1117 100%);
+  --app-text: #E6EDF3;
+  --app-text-2: #A0AEC0;
+  --app-primary: var(--app-primary-dark, #AAC7FF);
+  --app-on-primary: var(--app-on-primary-dark, #002F5C);
+  --app-circle-bg: rgba(255, 255, 255, 0.1);
+  --app-nav-bg: rgba(0, 0, 0, 0.45);
+  --app-grid-line: transparent;
+  --course-alpha: 0.75;
 }
 
 html {
@@ -83,7 +109,7 @@ body {
 }
 
 /* ==========================================================================
-   手机模型 + 课程卡
+   手机模型外壳
    ========================================================================== */
 .phone-mockup {
   width: 290px;
@@ -121,12 +147,282 @@ body {
   z-index: 30;
 }
 
-.course-card-m3 {
-  border-radius: 8px;
-  padding: 6px 8px;
-  font-size: 11px;
-  line-height: 1.35;
-  transition: background-color 0.35s ease, color 0.35s ease, transform 0.2s ease;
+/* 屏幕内容区：导出截图时截的就是这一块 */
+.phone-screen {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--phone-screen-bg);
+}
+
+/* ==========================================================================
+   App「周课表」页还原
+   结构对齐 WeekPagerAdapter：32dp 节次轴 + 7 等分日列 + 绝对定位课程卡
+   ========================================================================== */
+.app-screen-host {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.app-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 360px; /* = layout.baseWidth */
+  transform-origin: top left;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-top: var(--app-status-bar);
+  background: var(--screen-gradient);
+  color: var(--app-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- 顶栏：第N周 + 日期 + 刷新 / 菜单 --- */
+.app-header {
+  display: flex;
+  align-items: center;
+  flex: none;
+  padding: 12px 16px 8px;
+}
+
+.app-header-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.app-week-info {
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--app-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-date {
+  margin-top: 2px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--app-primary);
+}
+
+.app-circle-btn {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  margin-left: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--app-circle-bg);
+  color: var(--app-text-2);
+}
+
+.app-circle-btn svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* --- 日期栏：年 / 年份 + 一…日 / 月-日 --- */
+.app-daterow {
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+
+.app-year-cell {
+  width: 32px;
+  flex: none;
+  text-align: center;
+}
+
+.app-year-label {
+  font-size: 10px;
+  color: var(--app-text-2);
+}
+
+.app-year-value {
+  font-size: 12px;
+  color: var(--app-text-2);
+}
+
+.app-weekday {
+  flex: 1;
+  text-align: center;
+  font-size: 14px;
+  color: var(--app-text);
+}
+
+.app-date-cell {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  color: var(--app-text-2);
+  padding-bottom: 8px;
+}
+
+.app-date-num {
+  display: inline-block;
+  min-width: 36px;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.app-date-num.is-today {
+  background: var(--app-primary);
+  color: var(--app-on-primary);
+}
+
+/* --- 课表网格 --- */
+.app-grid {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.app-axis {
+  width: 32px;
+  flex: none;
+}
+
+.app-axis-cell {
+  height: 68px; /* = layout.cellHeight */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+
+.app-axis-node {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.app-axis-time {
+  font-size: 10px;
+  line-height: 1.1;
+  color: var(--app-text-2);
+}
+
+.app-days {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  display: flex;
+}
+
+.app-day {
+  flex: 1;
+  border-left: 1px dashed var(--app-grid-line);
+}
+
+.app-cell {
+  height: 68px;
+  border-top: 1px dashed var(--app-grid-line);
+}
+
+.app-course {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 4px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  white-space: pre-line;
+  overflow: hidden;
+  transition: background-color 0.35s ease;
+}
+
+.app-overlap {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--app-primary);
+  color: var(--app-on-primary);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+/* --- 底部导航：激活项 = 圆形色块 + 白图标 + 主色文字 --- */
+.app-nav {
+  flex: none;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  background: var(--app-nav-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.app-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--app-text-2);
+}
+
+.app-nav-holder {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-nav-circle {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--app-primary);
+  opacity: 0;
+}
+
+.app-nav-item.is-active .app-nav-circle {
+  opacity: 1;
+}
+
+.app-nav-icon {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  color: var(--app-text-2);
+}
+
+.app-nav-item.is-active .app-nav-icon {
+  color: var(--app-on-primary);
+}
+
+.app-nav-label {
+  margin-top: 2px;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.app-nav-item.is-active .app-nav-label {
+  color: var(--app-primary);
 }
 
 /* 下课倒计时秒表微动效 */
