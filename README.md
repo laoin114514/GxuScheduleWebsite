@@ -184,3 +184,22 @@ docker compose up -d mysql
 ```
 
 用本机安装的 MySQL 也可以，建好 `DB_NAME` 对应的库后 `go run .` 即可。
+
+## 前端官网（`frontend/`）
+
+仓库里的 `website/frontend` 是西大课栈的官网介绍页（Vue 3 + Vite + Tailwind），
+通过下面这个公开接口拿最新版本信息：
+
+    GET /api/v1/apps/schedule/latest?versionCode=0
+
+接口不可用时会自动回退到静态兜底数据，因此前后端可以分别部署。
+
+```bash
+cd website/frontend
+npm install
+npm run dev      # http://localhost:5173，/api 已代理到 http://localhost:8080
+npm run build    # 产出 dist/，交给 Nginx 托管即可
+```
+
+部署、环境变量、真实截图占位等细节见 [`frontend/README.md`](frontend/README.md)。
+

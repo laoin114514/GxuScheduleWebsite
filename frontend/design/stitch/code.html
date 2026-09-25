@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>西大课栈 - Android 课表应用</title>
+  <meta name="description" content="为广西大学学生打造的一键导入、智能提醒、可自由定制的开源 Android 课表应用。完全免费、无广告、代码开源。">
+  <meta property="og:title" content="西大课栈 - Android 课表应用">
+  <meta property="og:description" content="为广西大学学生打造的一键导入、智能提醒、可自由定制的 Android 课表。完全免费、无广告、代码开源。">
+  <meta property="og:image" content="https://lh3.googleusercontent.com/aida/AEtjO1U-nVbABB5t1RsSrQvGoHpqa2F0GoA6E0cYvjAw6NaRD8K-eptA4u4dHoD6NKOvFGaX879Rw8zHA4hD5e6czaGqzLQ4YkIlhQ3e_W4TAp1mPQku1LKTA4JU8gJt8HhreDWLYudgCpowSt6PNqlVNTLQatTNNjiF58K2iH6-60ARenZ1iXKlVRdbDvY0y3XVa-0XORtNLY7WIMevRC0hpOg6RPXmTfpnZUywF-avO5joEVxWRFyqTmDQbTE">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#4A90E2',
+              dark: '#1565C0',
+              light: '#E8F1FC',
+            },
+            slatebg: {
+              lightTop: '#DAE6F0',
+              lightBot: '#F3F6FA',
+              darkTop: '#1A2433',
+              darkBot: '#0D1117'
+            }
+          },
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', '"PingFang SC"', '"HarmonyOS Sans SC"', '"Microsoft YaHei"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(180deg, #DAE6F0 0%, #F3F6FA 100%);
+      --glass-bg: rgba(255, 255, 255, 0.72);
+      --glass-border: rgba(255, 255, 255, 0.8);
+      --glass-card: rgba(255, 255, 255, 0.75);
+      --card-border: rgba(0, 0, 0, 0.06);
+      --text-main: #1C1B1F;
+      --text-sub: #49454F;
+      --text-muted: #79747E;
+      --theme-active-color: #4A90E2;
+      --course-c1: #4A90E2;
+      --course-c2: #6750A4;
+      --course-c3: #00695C;
+      --course-c4: #EF6C00;
+      --course-c5: #C2185B;
+      --phone-screen-bg: #F0F4F8;
+    }
+
+    html.dark {
+      --bg-gradient: linear-gradient(180deg, #1A2433 0%, #0D1117 100%);
+      --glass-bg: rgba(26, 36, 51, 0.75);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-card: rgba(21, 30, 44, 0.78);
+      --card-border: rgba(255, 255, 255, 0.07);
+      --text-main: #E6EDF3;
+      --text-sub: #A0AEC0;
+      --text-muted: #718096;
+      --phone-screen-bg: #141B26;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.7;
+      transition: background 0.4s ease, color 0.3s ease;
+      min-height: 100vh;
+    }
+
+    .grid-bg-pattern {
+      background-image: 
+        linear-gradient(to right, rgba(74, 144, 226, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(74, 144, 226, 0.04) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    .glass-nav {
+      background: var(--glass-bg);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .glass-card {
+      background: var(--glass-card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      border-radius: 16px;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .glass-card:hover {
+      box-shadow: 0 8px 24px rgba(74, 144, 226, 0.08);
+    }
+
+    .phone-mockup {
+      width: 290px;
+      height: 590px;
+      border-radius: 36px;
+      border: 8px solid #1E293B;
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.15);
+      position: relative;
+      overflow: hidden;
+      background: var(--phone-screen-bg);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .phone-speaker {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 70px;
+      height: 4px;
+      background: #334155;
+      border-radius: 4px;
+      z-index: 30;
+    }
+
+    .phone-camera {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 10px;
+      height: 10px;
+      background: #0f172a;
+      border-radius: 50%;
+      z-index: 30;
+    }
+
+    .course-card-m3 {
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 11px;
+      line-height: 1.35;
+      transition: background-color 0.35s ease, color 0.35s ease, transform 0.2s ease;
+    }
+
+    /* Pulse for live countdown */
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.03); }
+    }
+    .animate-pulse-subtle {
+      animation: pulse-subtle 2s infinite ease-in-out;
+    }
+
+    /* Scroll animations */
+    .fade-in-section {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    }
+    .fade-in-section.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Accordion styles */
+    .faq-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s cubic-bezier(0, 1, 0, 1), padding 0.3s ease;
+    }
+    .faq-item.active .faq-content {
+      max-height: 250px;
+      transition: max-height 0.35s ease-in-out;
+    }
+    .faq-item.active .faq-icon {
+      transform: rotate(180deg);
+    }
+
+    /* Color dots active state */
+    .color-dot.active {
+      box-shadow: 0 0 0 3px #ffffff, 0 0 0 5px var(--theme-active-color);
+      transform: scale(1.15);
+    }
+    html.dark .color-dot.active {
+      box-shadow: 0 0 0 3px #1A2433, 0 0 0 5px var(--theme-active-color);
+    }
+  </style>
+</head>
+<body class="selection:bg-blue-100 selection:text-blue-900 dark:selection:bg-blue-950 dark:selection:text-blue-200">
+  <div class="grid-bg-pattern min-h-screen relative overflow-x-hidden">
+
+    <!-- ① 顶部导航（Sticky 玻璃） -->
+    <header id="navbar" class="glass-nav sticky top-0 z-50 transition-all duration-300 py-3.5">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <!-- Logo + 名字 -->
+        <a href="#hero" class="flex items-center space-x-3 group">
+          <img src="https://lh3.googleusercontent.com/aida/AEtjO1U-nVbABB5t1RsSrQvGoHpqa2F0GoA6E0cYvjAw6NaRD8K-eptA4u4dHoD6NKOvFGaX879Rw8zHA4hD5e6czaGqzLQ4YkIlhQ3e_W4TAp1mPQku1LKTA4JU8gJt8HhreDWLYudgCpowSt6PNqlVNTLQatTNNjiF58K2iH6-60ARenZ1iXKlVRdbDvY0y3XVa-0XORtNLY7WIMevRC0hpOg6RPXmTfpnZUywF-avO5joEVxWRFyqTmDQbTE" alt="西大课栈 Logo" class="w-9 h-9 rounded-xl shadow-sm transition-transform duration-200 group-hover:scale-105">
+          <div class="flex flex-col">
+            <span class="font-bold text-lg leading-tight tracking-tight text-slate-900 dark:text-white">西大课栈</span>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">GxuScheduleAPP</span>
+          </div>
+        </a>
+
+        <!-- 中部导航项 -->
+        <nav class="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-700 dark:text-slate-300">
+          <a href="#features" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">核心卖点</a>
+          <a href="#schedule-preview" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">课表交互</a>
+          <a href="#widgets" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">桌面小组件</a>
+          <a href="#tools" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">学习工具集</a>
+          <a href="#open-source" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">开源理念</a>
+          <a href="#faq" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">常见问题</a>
+        </nav>
+
+        <!-- 右侧按钮群 + 深色切换 -->
+        <div class="flex items-center space-x-3">
+          <!-- 深浅模式手动切换 -->
+          <button id="themeToggleBtn" aria-label="切换深浅主题" class="p-2 rounded-xl text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors">
+            <!-- 太阳图标 -->
+            <svg id="sunIcon" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+            <!-- 月亮图标 -->
+            <svg id="moonIcon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+          </button>
+
+          <!-- GitHub 源码 -->
+          <a href="https://github.com/laoin114514/GxuScheduleAPP" target="_blank" rel="noopener noreferrer" class="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-800/60 transition-all">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+            <span>GitHub</span>
+          </a>
+
+          <!-- 主按钮：下载应用 -->
+          <a href="#download" class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-[#4A90E2] text-white shadow-sm hover:bg-[#357ABD] active:translate-y-0.5 transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span>下载应用</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- ② Hero 首屏 -->
+    <section id="hero" class="relative pt-12 pb-20 md:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+        <!-- 左侧文案与 CTA -->
+        <div class="lg:col-span-7 flex flex-col items-start space-y-6">
+          <!-- 徽章 -->
+          <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-50/90 dark:bg-blue-950/50 border border-blue-200/80 dark:border-blue-800/80 text-xs font-medium text-blue-700 dark:text-blue-300">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>开源 · 免费 · 纯净无广告</span>
+            <span class="text-blue-300 dark:text-blue-700">|</span>
+            <span>为西大学子定制</span>
+          </div>
+
+          <!-- 主标题 -->
+          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.25]">
+            你的课表，<br class="hidden sm:inline">
+            <span class="bg-gradient-to-r from-[#4A90E2] to-[#1565C0] bg-clip-text text-transparent">本该这么好看、这么省心</span>
+          </h1>
+
+          <!-- 副标题 -->
+          <p class="text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl">
+            告别每次查课都要登录教务网页的折磨。一键同步课表、四重课前提醒绝不漏课、4 类桌面小组件抬眼即知、6 套 Material 3 配色随心切换。
+          </p>
+
+          <!-- CTA 按钮群 -->
+          <div class="flex flex-wrap items-center gap-4 pt-2">
+            <a href="https://github.com/laoin114514/GxuScheduleAPP/releases" target="_blank" rel="noopener noreferrer" class="px-6 py-3.5 rounded-xl bg-[#4A90E2] text-white font-semibold text-sm shadow-md hover:bg-[#357ABD] hover:shadow-lg transition-all flex items-center space-x-2 active:scale-95">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>立即下载 Android 安装包</span>
+            </a>
+            <a href="https://github.com/laoin114514/GxuScheduleAPP" target="_blank" rel="noopener noreferrer" class="px-5 py-3.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 text-slate-800 dark:text-slate-200 font-semibold text-sm hover:bg-white dark:hover:bg-slate-700/80 transition-all flex items-center space-x-2">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+              <span>查看开源源码</span>
+            </a>
+          </div>
+
+          <!-- 兼容性与开源说明 -->
+          <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-2 pt-1">
+            <span class="inline-block w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+            <span>支持 Android 8.0 ~ Android 15</span>
+            <span>·</span>
+            <span>基于 Apache-2.0 协议开源</span>
+            <span>·</span>
+            <span>原生 Kotlin 编写</span>
+          </div>
+
+          <!-- 数据小快报 -->
+          <div class="grid grid-cols-3 gap-4 pt-4 border-t border-slate-200/80 dark:border-slate-800/80 w-full max-w-lg">
+            <div>
+              <div class="text-2xl font-bold text-[#4A90E2]">0</div>
+              <div class="text-xs text-slate-500 dark:text-slate-400">广告 & 开屏弹窗</div>
+            </div>
+            <div>
+              <div class="text-2xl font-bold text-[#4A90E2]">100%</div>
+              <div class="text-xs text-slate-500 dark:text-slate-400">数据本地 Room 存储</div>
+            </div>
+            <div>
+              <div class="text-2xl font-bold text-[#4A90E2]">4 重</div>
+              <div class="text-xs text-slate-500 dark:text-slate-400">后台保活提醒防漏</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右侧：真实课表 9:20 手机模型演示 -->
+        <div class="lg:col-span-5 flex justify-center relative">
+          <!-- 柔和蓝色光晕 -->
+          <div class="absolute -inset-4 bg-gradient-to-r from-blue-400/20 to-sky-300/20 rounded-full blur-2xl -z-10 dark:from-blue-600/10 dark:to-cyan-500/10"></div>
+          
+          <div class="phone-mockup group">
+            <div class="phone-speaker"></div>
+            <div class="phone-camera"></div>
+
+            <!-- 手机内真实课表 UI 模拟 (基于真实 App M3 规范渲染) -->
+            <div class="p-3.5 pt-8 text-[12px] h-full flex flex-col justify-between">
+              <!-- 顶部标题栏 -->
+              <div>
+                <div class="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800">
+                  <div class="flex items-center space-x-1.5">
+                    <span class="font-bold text-sm text-slate-900 dark:text-white">第 07 周</span>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-medium">广西大学</span>
+                  </div>
+                  <div class="flex items-center space-x-2 text-slate-500">
+                    <span class="text-[11px] font-mono">2025 春</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+                  </div>
+                </div>
+
+                <!-- 周星期表头 -->
+                <div class="grid grid-cols-5 text-center py-2 text-[10px] text-slate-500 font-medium border-b border-slate-200/50 dark:border-slate-800/60">
+                  <div>周一<br><span class="text-[9px] text-slate-400">10/20</span></div>
+                  <div>周二<br><span class="text-[9px] text-slate-400">10/21</span></div>
+                  <div class="text-blue-600 dark:text-blue-400 font-bold">周三<br><span class="text-[9px]">今天</span></div>
+                  <div>周四<br><span class="text-[9px] text-slate-400">10/23</span></div>
+                  <div>周五<br><span class="text-[9px] text-slate-400">10/24</span></div>
+                </div>
+              </div>
+
+              <!-- 课表格子区域 (9 色 Material 3 半透明彩色块) -->
+              <div class="grid grid-cols-5 gap-1.5 my-2 flex-grow overflow-hidden relative">
+                <!-- 周一课程 -->
+                <div class="space-y-1.5">
+                  <div class="course-card-m3 text-white" style="background-color: var(--course-c1); height: 96px;">
+                    <div class="font-bold text-[10.5px]">高等数学(下)</div>
+                    <div class="text-[9px] opacity-90 mt-1">君武馆 201</div>
+                    <div class="text-[8px] opacity-75 mt-0.5">1-2节</div>
+                  </div>
+                  <div class="course-card-m3 text-white" style="background-color: var(--course-c3); height: 86px;">
+                    <div class="font-bold text-[10.5px]">大学物理实验</div>
+                    <div class="text-[9px] opacity-90 mt-1">物电楼 B302</div>
+                    <div class="text-[8px] opacity-75 mt-0.5">5-6节</div>
+                  </div>
+                </div>
+
+                <!-- 周二课程 -->
+                <div class="space-y-1.5">
+                  <div class="h-10"></div> <!-- 空间占位 -->
+                  <div class="course-card-m3 text-white" style="background-color: var(--course-c2); height: 96px;">
+                    <div class="font-bold text-[10.5px]">数据结构与算法</div>
+                    <div class="text-[9px] opacity-90 mt-1">计电楼 405</div>
+                    <div class="text-[8px] opacity-75 mt-0.5">3-4节</div>
+                  </div>
+                  <div class="course-card-m3 text-white" style="background-color: var(--course-c4); height: 75px;">
+                    <div class="font-bold text-[10.5px]">马克思主义</div>
+                    <div class="text-[9px] opacity-90 mt-0.5">汇学堂 A101</div>
+                    <div class="text-[8px] opacity-75 mt-0.5">7-8节</div>
+                  </div>
+                </div>
+
+                <!-- 周三 (今天) -->
+                <div class="space-y-1.5 bg-blue-50/40 dark:bg-blue-900/10 rounded-lg p-0.5">
+                  <div class="course-card-m3 text-white shadow-sm ring-1 ring-white/30" style="background-color: var(--course-c1); height: 96px;">
+                    <div class="flex items-center justify-between">
+                      <span class="font-bold text-[10.5px]">软件工程</span>
+                      <span class="text-[8px] px-1 bg-white/30 rounded">正在上</span>
+                    </div>
+                    <div class="text-[9px] opacity-95 mt-1">综合楼 312</div>
+                    <div class="text-[8px] opacity-80 mt-0.5">1-2节 · 距下课 18m</div>
+                  </div>
+                  <div class="course-card-m3 text-white relative" style="background-color: var(--course-c5); height: 86px;">
+                    <!-- 重叠角标指示 -->
+                    <span class="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-amber-400 ring-2 ring-white text-[7px] text-slate-900 font-bold flex items-center justify-center">2</span>
+                    <div class="font-bold text-[10.5px]">大学英语(IV)</div>
+                    <div class="text-[9px] opacity-90 mt-1">外语楼 108</div>
+                    <div class="text-[8px] opacity-75 mt-0.5">3-4节</div>
+                  </div>
+                </div>
+
+                <!-- 周四课程 -->
+                <div class="space-y-1.5">
+                  <div class="course-card-m3 text-white" style="background-color: #455A64; height: 90px;">
+                    <div class="font-bold text-[10.5px]">操作系统</div>
+                    <div class="text-[9px] opacity-90 mt-1">计电楼 208</div>
+                    <div class="text-[8px] opacity-75 mt-0.5">1-2节</div>
+                  </div>
+                  <div class="h-8"></div>
+                  <div class="course-card-m3 text-white" style="background-color: #2E7D32; height: 80px;">
+                    <div class="font-bold text-[10.5px]">羽毛球(初级)</div>
+                    <div class="text-[9px] opacity-90 mt-1">东体 场地3</div>
+                    <div class="text-[8px] opacity-75 mt-0.5">7-8节</div>
+                  </div>
+                </div>
+
+                <!-- 周五课程 -->
+                <div class="space-y-1.5">
+                  <div class="h-14"></div>
+                  <div class="course-card-m3 text-white" style="background-color: var(--course-c2); height: 90px;">
+                    <div class="font-bold text-[10.5px]">计算机网络</div>
+                    <div class="text-[9px] opacity-90 mt-1">计电楼 301</div>
+                    <div class="text-[8px] opacity-75 mt-0.5">3-4节</div>
+                  </div>
+                  <div class="course-card-m3 text-white" style="background-color: #7D5260; height: 85px;">
+                    <div class="font-bold text-[10.5px]">形势与政策</div>
+                    <div class="text-[9px] opacity-90 mt-1">汇学堂 B201</div>
+                    <div class="text-[8px] opacity-75 mt-0.5">9-10节</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 底部模拟导航条 -->
+              <div class="pt-2 border-t border-slate-200/50 dark:border-slate-800/80 flex items-center justify-around text-slate-400 text-[10px]">
+                <div class="text-[#4A90E2] font-semibold flex flex-col items-center">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                  <span>课表</span>
+                </div>
+                <div class="flex flex-col items-center">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                  <span>工具</span>
+                </div>
+                <div class="flex flex-col items-center">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                  <span>我的</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ③ 核心能力（4 个并排卖点卡，大号数字 + 短句） -->
+    <section id="features" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-3xl mx-auto mb-12">
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">硬核功能，把简单做到极致</h2>
+        <p class="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-400">不做华而不实的冗余堆叠，只为解决在校大学生看课最痛的几个瞬间。</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- 卖点 1: 一键导入 -->
+        <div class="glass-card p-6 flex flex-col justify-between">
+          <div>
+            <div class="text-3xl sm:text-4xl font-extrabold text-[#4A90E2] tracking-tight">01</div>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mt-3">教务一键导入</h3>
+            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+              绑定教务账号后自动拉取全学期课表，免除繁琐手打；同时支持 CSV、Excel 与 JSON 格式导入导出。
+            </p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800 text-[11px] text-blue-600 dark:text-blue-400 font-medium">
+            3 秒同步全部学期安排 →
+          </div>
+        </div>
+
+        <!-- 卖点 2: 四重提醒 -->
+        <div class="glass-card p-6 flex flex-col justify-between">
+          <div>
+            <div class="text-3xl sm:text-4xl font-extrabold text-[#4A90E2] tracking-tight">04</div>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mt-3">四重课前提醒</h3>
+            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+              setAlarmClock + WorkManager + 前台保活服务 + 智能心跳机制，对抗国产定制系统后台杀进程，尽量不漏课。
+            </p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800 text-[11px] text-blue-600 dark:text-blue-400 font-medium">
+            告别迟到与误旷课 →
+          </div>
+        </div>
+
+        <!-- 卖点 3: 四种小组件 -->
+        <div class="glass-card p-6 flex flex-col justify-between">
+          <div>
+            <div class="text-3xl sm:text-4xl font-extrabold text-[#4A90E2] tracking-tight">04</div>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mt-3">四种桌面小组件</h3>
+            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+              今日课程、下课倒计时、近日课程、一周课程。桌面直接抬眼看地点，不必每次解锁找应用图标。
+            </p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800 text-[11px] text-blue-600 dark:text-blue-400 font-medium">
+            下课倒计时精确到秒 →
+          </div>
+        </div>
+
+        <!-- 卖点 4: 完全可定制 -->
+        <div class="glass-card p-6 flex flex-col justify-between">
+          <div>
+            <div class="text-3xl sm:text-4xl font-extrabold text-[#4A90E2] tracking-tight">06+</div>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mt-3">完全个性化定制</h3>
+            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+              6 套 Material 3 配色、14 款背景、课格子高度 40-120dp 自由缩放、自定义背景图与定时深色模式。
+            </p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800 text-[11px] text-blue-600 dark:text-blue-400 font-medium">
+            课表长相，由你自己说了算 →
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ④ 课表展示区（实时交互色点 + 深浅色切换） -->
+    <section id="schedule-preview" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto mb-10">
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">同一张课表，五种样子</h2>
+        <p class="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-400">
+          点击下方色板，感受课程卡与界面强调色的平滑过渡。真实 App 支持深浅色自动跟随与 14 款定制背景。
+        </p>
+
+        <!-- 主题切换控件 -->
+        <div class="flex items-center justify-center space-x-4 mt-6 p-2 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-md inline-flex border border-slate-200/80 dark:border-slate-700/80">
+          <span class="text-xs font-medium text-slate-500 mr-1">预设主题：</span>
+          <!-- 经典紫 -->
+          <button onclick="switchThemePreset('purple')" class="color-dot w-7 h-7 rounded-full bg-[#6750A4] transition-all" title="经典紫" aria-label="经典紫"></button>
+          <!-- 海洋蓝 (默认) -->
+          <button onclick="switchThemePreset('ocean')" class="color-dot active w-7 h-7 rounded-full bg-[#1565C0] transition-all" title="海洋蓝" aria-label="海洋蓝"></button>
+          <!-- 青绿 -->
+          <button onclick="switchThemePreset('teal')" class="color-dot w-7 h-7 rounded-full bg-[#00695C] transition-all" title="青绿" aria-label="青绿"></button>
+          <!-- 暖棕/琥珀 -->
+          <button onclick="switchThemePreset('amber')" class="color-dot w-7 h-7 rounded-full bg-[#EF6C00] transition-all" title="暖棕" aria-label="暖棕"></button>
+          <!-- 玫红 -->
+          <button onclick="switchThemePreset('rose')" class="color-dot w-7 h-7 rounded-full bg-[#C2185B] transition-all" title="玫红" aria-label="玫红"></button>
+        </div>
+      </div>
+
+      <!-- 三台手机模型：中大号居中，左右稍小降低透明度 -->
+      <div class="relative flex items-center justify-center py-6 overflow-hidden">
+        <!-- 左侧手机（后退、微缩小） -->
+        <div class="hidden md:block transform -rotate-6 scale-90 opacity-60 hover:opacity-90 transition-all duration-300 -mr-16 z-0">
+          <div class="phone-mockup" style="transform: scale(0.92);">
+            <div class="p-3 pt-8 text-[11px] h-full flex flex-col justify-between">
+              <div class="text-center font-bold text-slate-700 dark:text-slate-300">第 06 周 · 上周</div>
+              <div class="grid grid-cols-4 gap-1.5 my-3">
+                <div class="course-card-m3 text-white" style="background-color: var(--course-c2); height: 75px;">
+                  <div class="font-bold text-[10px]">电路分析</div>
+                  <div class="text-[8px] opacity-80 mt-1">君武 102</div>
+                </div>
+                <div class="course-card-m3 text-white" style="background-color: var(--course-c1); height: 110px;">
+                  <div class="font-bold text-[10px]">大学体育</div>
+                  <div class="text-[8px] opacity-80 mt-1">西体 乒乓球</div>
+                </div>
+                <div class="course-card-m3 text-white" style="background-color: var(--course-c4); height: 65px;">
+                  <div class="font-bold text-[10px]">形势政策</div>
+                </div>
+                <div class="course-card-m3 text-white" style="background-color: var(--course-c3); height: 95px;">
+                  <div class="font-bold text-[10px]">线性代数</div>
+                  <div class="text-[8px] opacity-80 mt-1">汇学 A301</div>
+                </div>
+              </div>
+              <div class="text-center text-[10px] text-slate-400">左右滑动顺畅切换周次</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 中间大号主手机 -->
+        <div class="z-10 shadow-2xl rounded-[36px] transition-all duration-300 transform hover:scale-[1.02]">
+          <div id="interactivePhone" class="phone-mockup" style="width: 310px; height: 630px;">
+            <div class="phone-speaker"></div>
+            <div class="phone-camera"></div>
+
+            <div class="p-4 pt-9 text-[12px] h-full flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between pb-2 border-b border-slate-200/70 dark:border-slate-800">
+                  <div class="flex items-center space-x-1.5">
+                    <span id="currentWeekLabel" class="font-bold text-sm text-slate-900 dark:text-white">第 07 周</span>
+                    <span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-medium">智能同步中</span>
+                  </div>
+                  <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">● 已连接教务</span>
+                </div>
+
+                <div class="grid grid-cols-5 text-center py-2 text-[10px] text-slate-500 font-medium border-b border-slate-200/50 dark:border-slate-800/60">
+                  <div>一<br><span class="text-[9px] text-slate-400">10/20</span></div>
+                  <div>二<br><span class="text-[9px] text-slate-400">10/21</span></div>
+                  <div class="text-blue-600 dark:text-blue-400 font-bold">三<br><span class="text-[9px]">今日</span></div>
+                  <div>四<br><span class="text-[9px] text-slate-400">10/23</span></div>
+                  <div>五<br><span class="text-[9px] text-slate-400">10/24</span></div>
+                </div>
+              </div>
+
+              <!-- 主课表格子 -->
+              <div class="grid grid-cols-5 gap-1.5 my-2 flex-grow overflow-hidden relative">
+                <!-- 1 -->
+                <div class="space-y-1.5">
+                  <div class="course-card-m3 text-white transition-all duration-300" style="background-color: var(--course-c1); height: 95px;">
+                    <div class="font-bold text-[10.5px]">软件工程概论</div>
+                    <div class="text-[9px] opacity-90 mt-1">君武馆 301</div>
+                    <div class="text-[8px] opacity-75 mt-0.5">1-2 节</div>
+                  </div>
+                  <div class="course-card-m3 text-white transition-all duration-300" style="background-color: var(--course-c3); height: 85px;">
+                    <div class="font-bold text-[10.5px]">数字逻辑设计</div>
+                    <div class="text-[9px] opacity-90 mt-1">计电楼 B102</div>
+                    <div class="text-[8px] opacity-75 mt-0.5">5-6 节</div>
+                  </div>
+                </div>
+
+                <!-- 2 -->
+                <div class="space-y-1.5">
+                  <div class="h-6"></div>
+                  <div class="course-card-m3 text-white transition-all duration-300" style="background-color: var(--course-c2); height: 98px;">
+                    <div class="font-bold text-[10.5px]">面向对象编程</div>
+                    <div class="text-[9px] opacity-90 mt-1">计电机房 3</div>
+                    <div class="text-[8px] opacity-75 mt-0.5">3-4 节</div>
+                  </div>
+                  <div class="course-card-m3 text-white transition-all duration-300" style="background-color: var(--course-c4); height: 75px;">
+                    <div class="font-bold text-[10.5px]">马克思主义</div>
+                    <div class="text-[9px] opacity-90 mt-0.5">汇学堂 A101</div>
+                  </div>
+                </div>
+
+                <!-- 3 (今日高亮) -->
+                <div class="space-y-1.5 bg-blue-50/50 dark:bg-blue-900/20 rounded-lg p-0.5">
+                  <div class="course-card-m3 text-white shadow-sm ring-1 ring-white/40" style="background-color: var(--course-c1); height: 105px;">
+                    <div class="flex items-center justify-between">
+                      <span class="font-bold text-[10.5px]">操作系统原理</span>
+                      <span class="text-[7.5px] px-1 bg-white/20 rounded">提醒已设</span>
+                    </div>
+                    <div class="text-[9px] opacity-95 mt-1.5">综合楼 312</div>
+                    <div class="text-[8px] opacity-85 mt-0.5">1-2 节 · 08:00</div>
+                  </div>
+                  <div class="course-card-m3 text-white relative transition-all duration-300" style="background-color: var(--course-c5); height: 90px;">
+                    <span class="absolute top-1 right-1 w-3 h-3 rounded-full bg-amber-400 ring-2 ring-white text-[7.5px] text-slate-900 font-bold flex items-center justify-center">重</span>
+                    <div class="font-bold text-[10.5px]">大学英语精读</div>
+                    <div class="text-[9px] opacity-90 mt-1">外国语 204</div>
+                    <div class="text-[8px] opacity-75 mt-0.5">3-4 节</div>
+                  </div>
+                </div>
+
+                <!-- 4 -->
+                <div class="space-y-1.5">
+                  <div class="course-card-m3 text-white transition-all duration-300" style="background-color: #546E7A; height: 85px;">
+                    <div class="font-bold text-[10.5px]">计算机组成</div>
+                    <div class="text-[9px] opacity-90 mt-1">计电楼 401</div>
+                  </div>
+                  <div class="h-8"></div>
+                  <div class="course-card-m3 text-white transition-all duration-300" style="background-color: #2E7D32; height: 80px;">
+                    <div class="font-bold text-[10.5px]">大学体育</div>
+                    <div class="text-[9px] opacity-90 mt-1">东体馆</div>
+                  </div>
+                </div>
+
+                <!-- 5 -->
+                <div class="space-y-1.5">
+                  <div class="h-12"></div>
+                  <div class="course-card-m3 text-white transition-all duration-300" style="background-color: var(--course-c2); height: 95px;">
+                    <div class="font-bold text-[10.5px]">概率论与数理</div>
+                    <div class="text-[9px] opacity-90 mt-1">汇学 B202</div>
+                    <div class="text-[8px] opacity-75 mt-0.5">3-4 节</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 底部底栏说明 -->
+              <div class="pt-2 text-center text-[10px] text-slate-400">
+                课格子高度支持 40~120dp 自由拉伸
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右侧手机（后退、微缩小） -->
+        <div class="hidden md:block transform rotate-6 scale-90 opacity-60 hover:opacity-90 transition-all duration-300 -ml-16 z-0">
+          <div class="phone-mockup" style="transform: scale(0.92);">
+            <div class="p-3 pt-8 text-[11px] h-full flex flex-col justify-between">
+              <div class="text-center font-bold text-slate-700 dark:text-slate-300">第 08 周 · 下周</div>
+              <div class="grid grid-cols-4 gap-1.5 my-3">
+                <div class="course-card-m3 text-white" style="background-color: var(--course-c5); height: 80px;">
+                  <div class="font-bold text-[10px]">专业英语</div>
+                  <div class="text-[8px] opacity-80 mt-1">外语 301</div>
+                </div>
+                <div class="course-card-m3 text-white" style="background-color: var(--course-c3); height: 100px;">
+                  <div class="font-bold text-[10px]">算法设计</div>
+                  <div class="text-[8px] opacity-80 mt-1">计电 105</div>
+                </div>
+                <div class="course-card-m3 text-white" style="background-color: var(--course-c1); height: 90px;">
+                  <div class="font-bold text-[10px]">大学物理</div>
+                  <div class="text-[8px] opacity-80 mt-1">物电 A201</div>
+                </div>
+                <div class="course-card-m3 text-white" style="background-color: var(--course-c2); height: 70px;">
+                  <div class="font-bold text-[10px]">毛泽东思想</div>
+                </div>
+              </div>
+              <div class="text-center text-[10px] text-slate-400">内置法定节假日智能隐藏课程</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ⑤ 桌面小组件专区 -->
+    <section id="widgets" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">桌面小组件专区</h2>
+        <p class="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-400">不用点开 App，抬眼就知道下节课在哪。4 款精雕细琢的 Android 原生微件。</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- 组件 1: 下课倒计时 (含动态秒表 jump) -->
+        <div class="glass-card p-5 relative overflow-hidden flex flex-col justify-between border-blue-200/50 dark:border-blue-900/50">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>Widget · 2×1</span>
+            <span class="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px]">实时计算</span>
+          </div>
+
+          <div class="my-4">
+            <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">当前课程：软件工程</div>
+            <div class="mt-1 flex items-baseline space-x-2">
+              <span class="text-xs text-slate-600 dark:text-slate-300">距下课还有</span>
+              <span id="liveCountdown" class="text-3xl font-extrabold font-mono text-[#4A90E2] animate-pulse-subtle">18:42</span>
+            </div>
+            <div class="mt-2 text-xs text-slate-600 dark:text-slate-400 flex items-center space-x-1.5">
+              <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <span>君武馆 301 · 教室</span>
+            </div>
+          </div>
+
+          <div class="text-[11px] text-slate-400 pt-2 border-t border-slate-200/60 dark:border-slate-800">
+            下课倒计时组件
+          </div>
+        </div>
+
+        <!-- 组件 2: 今日课程 -->
+        <div class="glass-card p-5 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>Widget · 2×2</span>
+            <span class="text-[11px] font-mono text-slate-400">周三 · 3 门课</span>
+          </div>
+
+          <div class="my-3 space-y-2">
+            <div class="p-2 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/60">
+              <div class="flex justify-between text-[11px] font-bold text-slate-900 dark:text-white">
+                <span>08:00 软件工程</span>
+                <span class="text-[9px] text-blue-600">已上完</span>
+              </div>
+              <div class="text-[10px] text-slate-500 mt-0.5">君武 301</div>
+            </div>
+
+            <div class="p-2 rounded-xl bg-purple-50/80 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-900/60">
+              <div class="flex justify-between text-[11px] font-bold text-slate-900 dark:text-white">
+                <span>10:10 大学英语</span>
+                <span class="text-[9px] text-purple-600 font-bold">下一节</span>
+              </div>
+              <div class="text-[10px] text-slate-500 mt-0.5">外国语 204 · 3-4节</div>
+            </div>
+
+            <div class="p-2 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/60">
+              <div class="flex justify-between text-[11px] font-bold text-slate-900 dark:text-white">
+                <span>14:30 算法设计</span>
+                <span class="text-[9px] text-slate-400">未开始</span>
+              </div>
+              <div class="text-[10px] text-slate-500 mt-0.5">计电 105 · 5-6节</div>
+            </div>
+          </div>
+
+          <div class="text-[11px] text-slate-400 pt-2 border-t border-slate-200/60 dark:border-slate-800">
+            今日课程概览组件
+          </div>
+        </div>
+
+        <!-- 组件 3: 近日课程 -->
+        <div class="glass-card p-5 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>Widget · 4×1</span>
+            <span class="text-[10px] text-slate-400">紧凑条形</span>
+          </div>
+
+          <div class="my-4">
+            <div class="text-xs font-semibold text-slate-900 dark:text-white flex items-center justify-between">
+              <span>下一门课提醒</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200">20 分钟后</span>
+            </div>
+            <div class="mt-2 text-sm font-bold text-slate-900 dark:text-white">大学英语(IV)</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">10:10 ~ 11:50 · 外国语楼 204</div>
+          </div>
+
+          <div class="text-[11px] text-slate-400 pt-2 border-t border-slate-200/60 dark:border-slate-800">
+            近日课程轻量条
+          </div>
+        </div>
+
+        <!-- 组件 4: 一周课程全览 -->
+        <div class="glass-card p-5 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>Widget · 4×4</span>
+            <span class="text-[10px] text-slate-400">全览小窗</span>
+          </div>
+
+          <div class="my-3">
+            <div class="text-xs font-bold text-slate-900 dark:text-white mb-2">周视图微缩地图</div>
+            <div class="grid grid-cols-5 gap-1 text-[9px] text-center font-mono">
+              <div class="p-1 rounded bg-blue-100/70 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200">一<br>2节</div>
+              <div class="p-1 rounded bg-blue-100/70 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200">二<br>3节</div>
+              <div class="p-1 rounded bg-blue-500 text-white font-bold">三<br>3节</div>
+              <div class="p-1 rounded bg-blue-100/70 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200">四<br>2节</div>
+              <div class="p-1 rounded bg-blue-100/70 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200">五<br>1节</div>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-3 leading-relaxed">
+              直接在主屏幕拖拽滑动，双指还可局部缩放课格密度。
+            </p>
+          </div>
+
+          <div class="text-[11px] text-slate-400 pt-2 border-t border-slate-200/60 dark:border-slate-800">
+            一周课程微缩矩阵
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ⑥ 工具集（功能栅格，3 列 × 3 行） -->
+    <section id="tools" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">一揽子校园学习工具集</h2>
+        <p class="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-400">围绕西大学生核心动线，成绩、绩点、教室、借书，通通装进一个口袋。</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- 成绩查询 -->
+        <div class="glass-card p-6 group hover:-translate-y-1 hover:border-blue-400/60 transition-all">
+          <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-[#4A90E2] flex items-center justify-center font-bold">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
+          <h3 class="text-base font-bold text-slate-900 dark:text-white mt-4 group-hover:text-blue-600 transition-colors">成绩与考试安排</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+            直连教务同步期末各科考试时间地点；考试前自动开启提醒倒数，查分快人一步。
+          </p>
+        </div>
+
+        <!-- 绩点计算器 -->
+        <div class="glass-card p-6 group hover:-translate-y-1 hover:border-blue-400/60 transition-all">
+          <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/50 text-[#6750A4] flex items-center justify-center font-bold">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          </div>
+          <h3 class="text-base font-bold text-slate-900 dark:text-white mt-4 group-hover:text-blue-600 transition-colors">绩点计算 & 模拟试算</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+            支持广西大学保研/奖学金 GPA 计算标准；可预估期末单科得分，模拟试算最终总绩点。
+          </p>
+        </div>
+
+        <!-- 空教室查询 -->
+        <div class="glass-card p-6 group hover:-translate-y-1 hover:border-blue-400/60 transition-all">
+          <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-[#00695C] flex items-center justify-center font-bold">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          </div>
+          <h3 class="text-base font-bold text-slate-900 dark:text-white mt-4 group-hover:text-blue-600 transition-colors">空闲教室检索</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+            君武馆、汇学堂、计电楼、综合楼空闲自习室一键筛选，自习找座位不再扑空。
+          </p>
+        </div>
+
+        <!-- 番茄钟 -->
+        <div class="glass-card p-6 group hover:-translate-y-1 hover:border-blue-400/60 transition-all">
+          <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-[#EF6C00] flex items-center justify-center font-bold">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <h3 class="text-base font-bold text-slate-900 dark:text-white mt-4 group-hover:text-blue-600 transition-colors">专注番茄钟</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+            内置 25 分钟专注 + 5 分钟休息周期；期末复习与自习专心沉浸，拒绝短视频干扰。
+          </p>
+        </div>
+
+        <!-- 快速笔记 -->
+        <div class="glass-card p-6 group hover:-translate-y-1 hover:border-blue-400/60 transition-all">
+          <div class="w-10 h-10 rounded-xl bg-pink-100 dark:bg-pink-900/50 text-[#C2185B] flex items-center justify-center font-bold">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+          </div>
+          <h3 class="text-base font-bold text-slate-900 dark:text-white mt-4 group-hover:text-blue-600 transition-colors">灵感与课堂速记</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+            老师布置的随堂作业、分组汇报要点、闪现的灵感，课表旁一键随记，不遗漏任何任务。
+          </p>
+        </div>
+
+        <!-- 课表导出成图 -->
+        <div class="glass-card p-6 group hover:-translate-y-1 hover:border-blue-400/60 transition-all">
+          <div class="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/50 text-[#1565C0] flex items-center justify-center font-bold">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          </div>
+          <h3 class="text-base font-bold text-slate-900 dark:text-white mt-4 group-hover:text-blue-600 transition-colors">课表一键导出成图</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+            将当前周或全学期课表导出为超清壁纸或长图，方便设为手机锁屏或分享给同班好友。
+          </p>
+        </div>
+
+        <!-- 图书馆 & 校园卡 -->
+        <div class="glass-card p-6 group hover:-translate-y-1 hover:border-blue-400/60 transition-all">
+          <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 text-[#5E35B1] flex items-center justify-center font-bold">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          </div>
+          <h3 class="text-base font-bold text-slate-900 dark:text-white mt-4 group-hover:text-blue-600 transition-colors">图书馆藏与校园卡</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+            书籍借阅状态与续借提醒、校园卡余额变动速查，一站式集成便捷实用入口。
+          </p>
+        </div>
+
+        <!-- 校园地图 -->
+        <div class="glass-card p-6 group hover:-translate-y-1 hover:border-blue-400/60 transition-all">
+          <div class="w-10 h-10 rounded-xl bg-teal-100 dark:bg-teal-900/50 text-[#00695C] flex items-center justify-center font-bold">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+          </div>
+          <h3 class="text-base font-bold text-slate-900 dark:text-white mt-4 group-hover:text-blue-600 transition-colors">西大校区手绘地图</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+            针对西大校园大、教学楼分散的痛点，快速索引各教学楼、实验楼、宿舍与东体西体。
+          </p>
+        </div>
+
+        <!-- 食堂菜谱 -->
+        <div class="glass-card p-6 group hover:-translate-y-1 hover:border-blue-400/60 transition-all">
+          <div class="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/50 text-[#EF6C00] flex items-center justify-center font-bold">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+          </div>
+          <h3 class="text-base font-bold text-slate-900 dark:text-white mt-4 group-hover:text-blue-600 transition-colors">食堂档口与菜谱精选</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+            东苑、西苑、南苑各大食堂招牌菜评价，纠结今天吃什么时看一眼，拯救选择困难。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ⑦ 主题与外观（深浅色对照区） -->
+    <section class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">日间清爽 · 夜间护眼</h2>
+        <p class="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-400">支持系统跟随或定时自动切换，夜晚查课不刺眼。字体五档等比缩放、格子高度自由调。</p>
+      </div>
+
+      <!-- 对照面板 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        <!-- 浅色方案 -->
+        <div class="p-6 rounded-2xl bg-gradient-to-b from-[#DAE6F0] to-[#F3F6FA] border border-white/80 shadow-md">
+          <div class="flex items-center justify-between pb-4 border-b border-slate-300/50">
+            <span class="text-xs font-bold text-slate-700">浅色模式 (07:00 ~ 22:00)</span>
+            <span class="text-[10px] text-blue-700 font-mono px-2 py-0.5 rounded bg-blue-100/80">晨光清爽</span>
+          </div>
+          <div class="p-4 mt-4 bg-white/70 rounded-xl space-y-2 border border-white/60">
+            <div class="flex justify-between items-center text-xs font-bold text-slate-800">
+              <span>08:00 高等数学</span>
+              <span class="text-[10px] text-blue-600">君武 201</span>
+            </div>
+            <div class="text-[11px] text-slate-500">冷调浅灰白底底色，纯净高对比度，阳光下清晰可读。</div>
+          </div>
+        </div>
+
+        <!-- 深色方案 -->
+        <div class="p-6 rounded-2xl bg-gradient-to-b from-[#1A2433] to-[#0D1117] border border-slate-700/80 shadow-md text-white">
+          <div class="flex items-center justify-between pb-4 border-b border-slate-700/60">
+            <span class="text-xs font-bold text-slate-200">深色模式 (22:00 ~ 07:00)</span>
+            <span class="text-[10px] text-cyan-300 font-mono px-2 py-0.5 rounded bg-cyan-950/80">夜间舒适</span>
+          </div>
+          <div class="p-4 mt-4 bg-[#151E2C]/90 rounded-xl space-y-2 border border-slate-700/50">
+            <div class="flex justify-between items-center text-xs font-bold text-slate-100">
+              <span>明早 08:00 高等数学</span>
+              <span class="text-[10px] text-blue-400">智能闹钟已备好</span>
+            </div>
+            <div class="text-[11px] text-slate-400">深灰蓝基底配半透明色块，深夜熄灯后看课不刺眼。</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 参数调整提示 -->
+      <div class="mt-8 text-center text-xs text-slate-500 dark:text-slate-400">
+        <span class="font-medium text-slate-700 dark:text-slate-300">个性化调节：</span> 字体大小五档无级缩放 · 课程格子高度 40~120dp 自定义 · 14 款官方定制冷暖背景底色
+      </div>
+    </section>
+
+    <!-- ⑧ 开源与隐私（可信度区块） -->
+    <section id="open-source" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="glass-card p-8 sm:p-12 relative overflow-hidden">
+        <div class="max-w-3xl">
+          <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-medium mb-4">
+            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+            <span>无服务器中间人 · 数据 100% 留存在手机本地</span>
+          </div>
+
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">课表是你的，数据也留在你的手机里</h2>
+          <p class="mt-3 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+            没有商业打扰，没有弹窗推销。基于历史优秀开源项目二次开发，所有代码完全公开透明，教务账密直接在手机本地加密存入 Room 数据库与教务对接，不经任何第三方中转。
+          </p>
+        </div>
+
+        <!-- 3 个保障要点 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+          <div class="p-4 rounded-xl bg-white/40 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-700/50">
+            <div class="text-sm font-bold text-slate-900 dark:text-white flex items-center space-x-1.5">
+              <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+              <span>数据本地存储</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">
+              使用 Android 原生 Room 数据库安全存储，无云端账户依赖，断网也能飞速看课。
+            </p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-white/40 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-700/50">
+            <div class="text-sm font-bold text-slate-900 dark:text-white flex items-center space-x-1.5">
+              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+              <span>代码完全开源</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">
+              遵循 Apache License 2.0，欢迎审查每一行代码，学生开发者也可随时自编译打包。
+            </p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-white/40 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-700/50">
+            <div class="text-sm font-bold text-slate-900 dark:text-white flex items-center space-x-1.5">
+              <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+              <span>永久免费无广告</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">
+              纯粹出于解决同学日常看课痛点的学生作品，无任何商业变现考量与开屏广告。
+            </p>
+          </div>
+        </div>
+
+        <!-- 技术栈标签 -->
+        <div class="mt-8 pt-6 border-t border-slate-200/60 dark:border-slate-700/60">
+          <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3">原生技术底座：</div>
+          <div class="flex flex-wrap gap-2 text-[11px] font-mono">
+            <span class="px-2.5 py-1 rounded-lg bg-blue-100/60 dark:bg-slate-800 text-slate-700 dark:text-slate-300">Kotlin</span>
+            <span class="px-2.5 py-1 rounded-lg bg-blue-100/60 dark:bg-slate-800 text-slate-700 dark:text-slate-300">Material 3</span>
+            <span class="px-2.5 py-1 rounded-lg bg-blue-100/60 dark:bg-slate-800 text-slate-700 dark:text-slate-300">MVVM Architecture</span>
+            <span class="px-2.5 py-1 rounded-lg bg-blue-100/60 dark:bg-slate-800 text-slate-700 dark:text-slate-300">Room Database</span>
+            <span class="px-2.5 py-1 rounded-lg bg-blue-100/60 dark:bg-slate-800 text-slate-700 dark:text-slate-300">Retrofit2 / OkHttp</span>
+            <span class="px-2.5 py-1 rounded-lg bg-blue-100/60 dark:bg-slate-800 text-slate-700 dark:text-slate-300">WorkManager / AlarmManager</span>
+            <span class="px-2.5 py-1 rounded-lg bg-blue-100/60 dark:bg-slate-800 text-slate-700 dark:text-slate-300">Apache POI (Excel解析)</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ⑨ 下载区（页面视觉收尾的强 CTA） -->
+    <section id="download" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="glass-card p-8 sm:p-12 text-center max-w-3xl mx-auto relative overflow-hidden border-blue-300/40 dark:border-blue-900/40 shadow-xl">
+        <div class="flex justify-center mb-4">
+          <img src="https://lh3.googleusercontent.com/aida/AEtjO1U-nVbABB5t1RsSrQvGoHpqa2F0GoA6E0cYvjAw6NaRD8K-eptA4u4dHoD6NKOvFGaX879Rw8zHA4hD5e6czaGqzLQ4YkIlhQ3e_W4TAp1mPQku1LKTA4JU8gJt8HhreDWLYudgCpowSt6PNqlVNTLQatTNNjiF58K2iH6-60ARenZ1iXKlVRdbDvY0y3XVa-0XORtNLY7WIMevRC0hpOg6RPXmTfpnZUywF-avO5joEVxWRFyqTmDQbTE" alt="西大课栈 图标" class="w-20 h-20 rounded-2xl shadow-md">
+        </div>
+
+        <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white">下载西大课栈</h2>
+        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2">
+          最新稳定版 · 适配 Android 8.0 至 Android 15 全部架构
+        </p>
+
+        <!-- 版本标签与信息 -->
+        <div class="flex items-center justify-center space-x-3 mt-4 text-xs font-mono text-slate-500">
+          <span class="px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-bold">v1.7.6 稳定版</span>
+          <span>·</span>
+          <span>更新日期：2025-03</span>
+          <span>·</span>
+          <span>大小约 16.8 MB</span>
+        </div>
+
+        <!-- 按钮群 -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
+          <a href="https://github.com/laoin114514/GxuScheduleAPP/releases" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#4A90E2] text-white font-bold text-sm shadow-md hover:bg-[#357ABD] active:translate-y-0.5 transition-all flex items-center justify-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span>下载正式版 APK (Releases)</span>
+          </a>
+          <a href="https://github.com/laoin114514/GxuScheduleAPP/releases" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto px-6 py-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 font-semibold text-sm hover:bg-white dark:hover:bg-slate-700 transition-all flex items-center justify-center space-x-2">
+            <span>查看完整更新日志</span>
+            <span>→</span>
+          </a>
+        </div>
+
+        <!-- 安装包说明 -->
+        <div class="mt-6 text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed max-w-lg mx-auto">
+          提供 universal 通用包及 arm64-v8a / armeabi-v7a / x86_64 细分架构包。安装时如提示「未知来源应用」，选择允许来自浏览器或本来源的安装即可。
+        </div>
+
+        <!-- 近期更新亮点 -->
+        <div class="mt-6 pt-4 border-t border-slate-200/60 dark:border-slate-800 text-left text-xs text-slate-600 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-900/30 p-3.5 rounded-xl">
+          <div class="font-bold text-slate-800 dark:text-slate-200 mb-1">近期重要更新：</div>
+          <ul class="list-disc list-inside space-y-1 text-[11px]">
+            <li>优化广西大学新版教务系统验证码与单点登录兼容性</li>
+            <li>新增下课倒计时 2×1 桌面小组件秒级刷新模式</li>
+            <li>修复在 Android 14/15 上的前台服务保活策略</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ⑩ 常见问题（FAQ 手风琴折叠） -->
+    <section id="faq" class="py-16 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-10">
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">常见问题与答疑</h2>
+        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">使用中有疑问？先看看这里有没有你遇到的情况。</p>
+      </div>
+
+      <div class="space-y-3">
+        <!-- Q1 -->
+        <div class="faq-item glass-card p-4 cursor-pointer" onclick="toggleFaq(this)">
+          <div class="flex items-center justify-between font-semibold text-sm text-slate-900 dark:text-white">
+            <span>导入后课表显示为空怎么办？</span>
+            <svg class="faq-icon w-4 h-4 text-slate-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </div>
+          <div class="faq-content text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+            请确认教务系统当前学期是否正确。可在「课表设置」中点击「手动选择学期」重试同步，或下拉课表主界面强制刷新缓存。若教务系统维护中，可稍候再试。
+          </div>
+        </div>
+
+        <!-- Q2 -->
+        <div class="faq-item glass-card p-4 cursor-pointer" onclick="toggleFaq(this)">
+          <div class="flex items-center justify-between font-semibold text-sm text-slate-900 dark:text-white">
+            <span>手机收不到上课前提醒怎么排查？</span>
+            <svg class="faq-icon w-4 h-4 text-slate-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </div>
+          <div class="faq-content text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+            国产系统（如 HyperOS、OriginOS、ColorOS、HarmonyOS）默认对后台限制严格。请前往系统设置：① 授予西大课栈「悬浮窗」和「通知」权限；② 将电池优化设置为「无限制」或「允许自启动」；③ 在 App 设置中开启「前台保活服务」。
+          </div>
+        </div>
+
+        <!-- Q3 -->
+        <div class="faq-item glass-card p-4 cursor-pointer" onclick="toggleFaq(this)">
+          <div class="flex items-center justify-between font-semibold text-sm text-slate-900 dark:text-white">
+            <span>会不会上传或泄露我的教务账号密码？</span>
+            <svg class="faq-icon w-4 h-4 text-slate-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </div>
+          <div class="faq-content text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+            绝对不会。西大课栈是纯客户端开源软件，没有自建后端服务器。您的教务账号和密码仅在本地使用 Android 安全加密存储，仅用于与广西大学官方教务接口通信以获取课表，任何人皆可在 GitHub 上检视网络请求代码。
+          </div>
+        </div>
+
+        <!-- Q4 -->
+        <div class="faq-item glass-card p-4 cursor-pointer" onclick="toggleFaq(this)">
+          <div class="flex items-center justify-between font-semibold text-sm text-slate-900 dark:text-white">
+            <span>换新手机后，如何快速迁移我的课表和自定义设置？</span>
+            <svg class="faq-icon w-4 h-4 text-slate-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </div>
+          <div class="faq-content text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+            在旧手机的「设置 - 数据备份」中点击「导出完整备份（JSON）」，发送到新手机；在新手机安装西大课栈后点击「导入文件备份」，即可瞬间完整恢复所有课程、自定义备注与色彩配置。
+          </div>
+        </div>
+
+        <!-- Q5 -->
+        <div class="faq-item glass-card p-4 cursor-pointer" onclick="toggleFaq(this)">
+          <div class="flex items-center justify-between font-semibold text-sm text-slate-900 dark:text-white">
+            <span>后续会支持其他高校的教务系统吗？</span>
+            <svg class="faq-icon w-4 h-4 text-slate-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </div>
+          <div class="faq-content text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+            西大课栈底层架构保留了可扩展的数据解析层（基于 WakeUp 课程表分支二次开发）。欢迎其他高校的同学在 GitHub 提交 PR 或 Issue 提供教务接口适配脚本！
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ⑪ 页脚 -->
+    <footer class="glass-nav mt-12 py-12 border-t border-slate-200/80 dark:border-slate-800">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <!-- 品牌列 -->
+          <div class="space-y-3">
+            <div class="flex items-center space-x-2">
+              <img src="https://lh3.googleusercontent.com/aida/AEtjO1U-nVbABB5t1RsSrQvGoHpqa2F0GoA6E0cYvjAw6NaRD8K-eptA4u4dHoD6NKOvFGaX879Rw8zHA4hD5e6czaGqzLQ4YkIlhQ3e_W4TAp1mPQku1LKTA4JU8gJt8HhreDWLYudgCpowSt6PNqlVNTLQatTNNjiF58K2iH6-60ARenZ1iXKlVRdbDvY0y3XVa-0XORtNLY7WIMevRC0hpOg6RPXmTfpnZUywF-avO5joEVxWRFyqTmDQbTE" alt="西大课栈 Logo" class="w-8 h-8 rounded-lg">
+              <span class="font-bold text-base text-slate-900 dark:text-white">西大课栈</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              为广西大学学生打造的一键导入、智能提醒、可自由定制的 Android 课表应用。
+            </p>
+            <div class="text-[11px] text-slate-400">
+              问题反馈：<a href="mailto:2908451607@qq.com" class="hover:text-blue-500 underline font-mono">2908451607@qq.com</a>
+            </div>
+          </div>
+
+          <!-- 快速链接 -->
+          <div>
+            <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">功能导航</h4>
+            <ul class="mt-3 space-y-2 text-xs text-slate-600 dark:text-slate-400">
+              <li><a href="#features" class="hover:text-blue-600">教务同步与提醒</a></li>
+              <li><a href="#schedule-preview" class="hover:text-blue-600">主题外观定制</a></li>
+              <li><a href="#widgets" class="hover:text-blue-600">Android 桌面小组件</a></li>
+              <li><a href="#tools" class="hover:text-blue-600">成绩与学习工具集</a></li>
+            </ul>
+          </div>
+
+          <!-- 开源生态 -->
+          <div>
+            <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">开源生态</h4>
+            <ul class="mt-3 space-y-2 text-xs text-slate-600 dark:text-slate-400">
+              <li><a href="https://github.com/laoin114514/GxuScheduleAPP" target="_blank" rel="noopener noreferrer" class="hover:text-blue-600">GitHub 仓库源码</a></li>
+              <li><a href="https://github.com/laoin114514/GxuScheduleAPP/releases" target="_blank" rel="noopener noreferrer" class="hover:text-blue-600">Releases 安装包发布</a></li>
+              <li><a href="https://github.com/laoin114514/GxuScheduleAPP/issues" target="_blank" rel="noopener noreferrer" class="hover:text-blue-600">提交 Issue 适配建议</a></li>
+              <li><span class="text-slate-400">开源协议：Apache-2.0</span></li>
+            </ul>
+          </div>
+
+          <!-- 社区与致谢 -->
+          <div>
+            <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">血统与致谢</h4>
+            <p class="mt-3 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              基于开源项目 <span class="font-mono text-slate-700 dark:text-slate-300">Yngu196/Schedule</span> 二次开发，最早血统来自 <span class="font-mono text-slate-700 dark:text-slate-300">WakeUp 课程表</span>。感谢所有为校园开源生态奉献的开发者。
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-slate-200/50 dark:border-slate-800 text-center text-xs text-slate-400 flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
+          <div>© 2026 西大课栈 · 基于 Yngu196/Schedule 二次开发，遵循 Apache License 2.0</div>
+          <div>专为 Android 打造 · 广西大学学子非官方校园开源工具</div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // 1. 深浅模式手动切换与持久化
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    
+    // 初始化检测
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+    initTheme();
+
+    themeToggleBtn.addEventListener('click', () => {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+    });
+
+    // 2. 主题色动态切换交互 (影响手机内的色板与强调色)
+    const colorPresets = {
+      purple: {
+        c1: '#6750A4',
+        c2: '#5E35B1',
+        c3: '#7D5260',
+        c4: '#EF6C00',
+        c5: '#C2185B',
+        brand: '#6750A4'
+      },
+      ocean: {
+        c1: '#4A90E2',
+        c2: '#1565C0',
+        c3: '#00695C',
+        c4: '#EF6C00',
+        c5: '#C2185B',
+        brand: '#4A90E2'
+      },
+      teal: {
+        c1: '#00695C',
+        c2: '#00897B',
+        c3: '#2E7D32',
+        c4: '#1565C0',
+        c5: '#E65100',
+        brand: '#00695C'
+      },
+      amber: {
+        c1: '#EF6C00',
+        c2: '#F57C00',
+        c3: '#6D4C41',
+        c4: '#1565C0',
+        c5: '#5E35B1',
+        brand: '#EF6C00'
+      },
+      rose: {
+        c1: '#C2185B',
+        c2: '#AD1457',
+        c3: '#6750A4',
+        c4: '#00695C',
+        c5: '#EF6C00',
+        brand: '#C2185B'
+      }
+    };
+
+    function switchThemePreset(presetKey) {
+      const p = colorPresets[presetKey];
+      if (!p) return;
+
+      const root = document.documentElement;
+      root.style.setProperty('--course-c1', p.c1);
+      root.style.setProperty('--course-c2', p.c2);
+      root.style.setProperty('--course-c3', p.c3);
+      root.style.setProperty('--course-c4', p.c4);
+      root.style.setProperty('--course-c5', p.c5);
+      root.style.setProperty('--theme-active-color', p.brand);
+
+      // 更新色点按钮高亮状态
+      document.querySelectorAll('.color-dot').forEach(dot => {
+        dot.classList.remove('active');
+      });
+      if (event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+      }
+    }
+
+    // 3. 下课倒计时动态跳动秒表微动效
+    let countdownSeconds = 18 * 60 + 42;
+    const countdownEl = document.getElementById('liveCountdown');
+    setInterval(() => {
+      if (countdownSeconds > 0) {
+        countdownSeconds--;
+        const mins = Math.floor(countdownSeconds / 60);
+        const secs = countdownSeconds % 60;
+        if (countdownEl) {
+          countdownEl.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+      }
+    }, 1000);
+
+    // 4. FAQ 手风琴展开与收起
+    function toggleFaq(item) {
+      const isActive = item.classList.contains('active');
+      // 关闭同层其它
+      document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('active'));
+      if (!isActive) {
+        item.classList.add('active');
+      }
+    }
+
+    // 默认展开第一条 FAQ
+    const firstFaq = document.querySelector('.faq-item');
+    if (firstFaq) {
+      firstFaq.classList.add('active');
+    }
+  </script>
+</body>
+</html>

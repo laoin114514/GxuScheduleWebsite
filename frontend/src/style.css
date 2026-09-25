@@ -1,0 +1,201 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   设计令牌 —— 与 Android App 课表页（bg_schedule_gradient + M3 调色板）同源
+   浅色：#DAE6F0 -> #F3F6FA ｜ 深色：#1A2433 -> #0D1117
+   ========================================================================== */
+:root {
+  --bg-gradient: linear-gradient(180deg, #DAE6F0 0%, #F3F6FA 100%);
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.8);
+  --glass-card: rgba(255, 255, 255, 0.75);
+  --card-border: rgba(0, 0, 0, 0.06);
+  --text-main: #1C1B1F;
+  --text-sub: #49454F;
+  --text-muted: #79747E;
+  --theme-active-color: #4A90E2;
+  --course-c1: #4A90E2;
+  --course-c2: #1565C0;
+  --course-c3: #00695C;
+  --course-c4: #EF6C00;
+  --course-c5: #C2185B;
+  --phone-screen-bg: #F0F4F8;
+}
+
+html.dark {
+  --bg-gradient: linear-gradient(180deg, #1A2433 0%, #0D1117 100%);
+  --glass-bg: rgba(26, 36, 51, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-card: rgba(21, 30, 44, 0.78);
+  --card-border: rgba(255, 255, 255, 0.07);
+  --text-main: #E6EDF3;
+  --text-sub: #A0AEC0;
+  --text-muted: #718096;
+  --phone-screen-bg: #141B26;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 84px;
+}
+
+body {
+  background: var(--bg-gradient);
+  color: var(--text-main);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
+  line-height: 1.7;
+  transition: background 0.4s ease, color 0.3s ease;
+  min-height: 100vh;
+}
+
+/* 极淡网格纹理，暗示课表格子 */
+.grid-bg-pattern {
+  background-image:
+    linear-gradient(to right, rgba(74, 144, 226, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(74, 144, 226, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* ==========================================================================
+   玻璃质感：导航 / 卡片
+   ========================================================================== */
+.glass-nav {
+  background: var(--glass-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.glass-card {
+  background: var(--glass-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  border-radius: 16px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.glass-card:hover {
+  box-shadow: 0 8px 24px rgba(74, 144, 226, 0.08);
+}
+
+/* ==========================================================================
+   手机模型 + 课程卡
+   ========================================================================== */
+.phone-mockup {
+  width: 290px;
+  height: 590px;
+  border-radius: 36px;
+  border: 8px solid #1E293B;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.15);
+  position: relative;
+  overflow: hidden;
+  background: var(--phone-screen-bg);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.phone-speaker {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70px;
+  height: 4px;
+  background: #334155;
+  border-radius: 4px;
+  z-index: 30;
+}
+
+.phone-camera {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  background: #0f172a;
+  border-radius: 50%;
+  z-index: 30;
+}
+
+.course-card-m3 {
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 11px;
+  line-height: 1.35;
+  transition: background-color 0.35s ease, color 0.35s ease, transform 0.2s ease;
+}
+
+/* 下课倒计时秒表微动效 */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.03); }
+}
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s infinite ease-in-out;
+}
+
+/* 滚动入场 */
+.fade-in-section {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.fade-in-section.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* FAQ 手风琴 */
+.faq-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0, 1, 0, 1), padding 0.3s ease;
+}
+.faq-item.active .faq-content {
+  max-height: 250px;
+  transition: max-height 0.35s ease-in-out;
+}
+.faq-item.active .faq-icon {
+  transform: rotate(180deg);
+}
+
+/* 主题色点 */
+.color-dot {
+  border: 0;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.color-dot.active {
+  box-shadow: 0 0 0 3px #ffffff, 0 0 0 5px var(--theme-active-color);
+  transform: scale(1.15);
+}
+html.dark .color-dot.active {
+  box-shadow: 0 0 0 3px #1A2433, 0 0 0 5px var(--theme-active-color);
+}
+
+/* ==========================================================================
+   无障碍与降级
+   ========================================================================== */
+:focus-visible {
+  outline: 2px solid var(--theme-active-color);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+img {
+  -webkit-user-drag: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .fade-in-section { opacity: 1 !important; transform: none !important; }
+}

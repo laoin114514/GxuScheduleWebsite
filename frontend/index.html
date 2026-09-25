@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>西大课栈 - Android 课表应用</title>
+  <meta name="description" content="为广西大学学生打造的一键导入、智能提醒、可自由定制的开源 Android 课表应用。完全免费、无广告、代码开源。" />
+  <meta property="og:title" content="西大课栈 - Android 课表应用" />
+  <meta property="og:description" content="为广西大学学生打造的一键导入、智能提醒、可自由定制的 Android 课表。完全免费、无广告、代码开源。" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="./favicon.png" />
+  <link rel="icon" type="image/png" href="./favicon.png" />
+  <script>
+    // 首屏前置应用主题，避免深色模式闪白
+    (function () {
+      try {
+        var saved = localStorage.getItem('gxu-theme');
+        var dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (dark) document.documentElement.classList.add('dark');
+      } catch (e) { /* 忽略隐私模式下的 localStorage 异常 */ }
+    })();
+  </script>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
