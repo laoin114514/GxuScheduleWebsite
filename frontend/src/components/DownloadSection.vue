@@ -16,16 +16,21 @@
       </p>
 
       <div class="flex items-center justify-center flex-wrap gap-x-3 gap-y-1 mt-4 text-xs font-mono text-slate-500">
-        <span class="px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-bold">
-          v{{ versionName }} 稳定版
+        <span v-if="loading" class="px-2.5 py-0.5 rounded-full bg-slate-200/70 dark:bg-slate-700/60 text-slate-500 dark:text-slate-300">
+          正在获取最新版本…
         </span>
-        <template v-if="updatedText">
-          <span>·</span>
-          <span>{{ updatedText }}</span>
-        </template>
-        <template v-if="sizeText">
-          <span>·</span>
-          <span>{{ sizeText }}</span>
+        <template v-else>
+          <span class="px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-bold">
+            v{{ versionName }} 稳定版
+          </span>
+          <template v-if="updatedText">
+            <span>·</span>
+            <span>{{ updatedText }}</span>
+          </template>
+          <template v-if="sizeText">
+            <span>·</span>
+            <span>{{ sizeText }}</span>
+          </template>
         </template>
       </div>
 
@@ -34,6 +39,7 @@
           :href="downloadUrl"
           target="_blank"
           rel="noopener noreferrer"
+          :title="sourceHint"
           class="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#4A90E2] text-white font-bold text-sm shadow-md hover:bg-[#357ABD] active:translate-y-0.5 transition-all flex items-center justify-center space-x-2"
         >
           <IconDownload class="w-5 h-5" />
@@ -55,6 +61,10 @@
         安装时如提示「未知来源应用」，选择允许来自浏览器或本来源的安装即可。
       </div>
 
+      <div v-if="fileName" class="mt-2 text-[11px] text-slate-400 dark:text-slate-500 font-mono break-all">
+        当前安装包：{{ fileName }}
+      </div>
+
       <div
         v-if="changelog.length"
         class="mt-6 pt-4 border-t border-slate-200/60 dark:border-slate-800 text-left text-xs text-slate-600 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-900/30 p-3.5 rounded-xl"
@@ -74,12 +84,15 @@ import { useRelease } from '../composables/useRelease'
 import IconDownload from './icons/IconDownload.vue'
 
 const {
+  loading,
   source,
+  sourceHint,
   versionName,
   sizeText,
   updatedText,
   changelog,
   downloadUrl,
   hasDirectDownload,
+  fileName,
 } = useRelease()
 </script>

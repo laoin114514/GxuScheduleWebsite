@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -266,6 +267,10 @@ type latestView struct {
 	SHA256             string `json:"sha256"`
 	FileSize           int64  `json:"fileSize"`
 	Forced             bool   `json:"forced"`
+	// PublishedAt 发版时间（RFC3339，UTC）。官网「更新日期」用它，缺失时前端不展示日期。
+	PublishedAt string `json:"publishedAt"`
+	// FileName 安装包原始文件名，便于前端展示 / 排查。
+	FileName string `json:"fileName"`
 }
 
 // LatestRelease GET /api/v1/apps/{appKey}/latest?versionCode=xxx
@@ -309,6 +314,10 @@ func (h *Handler) LatestRelease(c *gin.Context) {
 	view.SHA256 = release.SHA256
 	view.FileSize = release.Size
 	view.Forced = release.Forced
+	if !release.CreatedAt.IsZero() {
+		view.PublishedAt = release.CreatedAt.UTC().Format(time.RFC3339)
+	}
+	view.FileName = release.FileName
 	ok(c, view)
 }
 

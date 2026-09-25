@@ -38,6 +38,9 @@ type Config struct {
 	AllowDowngrade bool
 	RateLimitRPS   float64
 	RateLimitBurst int
+
+	// CORSAllowOrigins 允许跨域读取公开接口的来源；含 "*" 表示不限制。
+	CORSAllowOrigins []string
 }
 
 func Load() (*Config, error) {
@@ -64,6 +67,7 @@ func Load() (*Config, error) {
 		AllowDowngrade:     envBool("ALLOW_DOWNGRADE", false),
 		RateLimitRPS:       envFloat("RATE_LIMIT_RPS", 2),
 		RateLimitBurst:     envInt("RATE_LIMIT_BURST", 10),
+		CORSAllowOrigins:   envList("CORS_ALLOW_ORIGINS", "*"),
 	}
 	if err := cfg.validate(); err != nil {
 		return nil, err
@@ -105,6 +109,18 @@ func env(key, def string) string {
 		return v
 	}
 	return def
+}
+
+// envList 读取逗号分隔的列表，空项自动剔除。
+func envList(key, def string) []string {
+	parts := strings.Split(env(key, def), ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if p = strings.TrimSpace(p); p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
 }
 
 func envInt(key string, def int) int {

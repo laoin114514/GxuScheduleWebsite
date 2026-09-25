@@ -124,14 +124,21 @@ curl "https://your-domain/api/v1/apps/schedule/latest?versionCode=10706"
     "downloadUrl": "https://cdn.your-domain.com/release/schedule/10716/....apk",
     "sha256": "...",
     "fileSize": 38689642,
-    "forced": false
+    "forced": false,
+    "publishedAt": "2026-08-31T15:00:47Z",
+    "fileName": "GxuScheduleAPP-release-1.7.7-universal.apk"
   }
 }
 ```
 
 - `hasUpdate = current < latest`，`latest` 取该 appKey 下最大 versionCode。
 - 无任何发布记录时返回 `hasUpdate=false`，字段为空。
+- `publishedAt` 是发版时间（RFC3339，UTC，取自 `releases.created_at`），官网用它显示「更新日期」；
+  `fileName` 是安装包原始文件名。
+- **官网也读这个接口**（`versionCode=0` 永远拿最新版）：见 [`frontend/README.md`](frontend/README.md)。
 - 该接口公开，按 IP 限流（`RATE_LIMIT_RPS` / `RATE_LIMIT_BURST`）。
+- 跨域：官网若与更新服务不同域，需要 CORS。默认 `CORS_ALLOW_ORIGINS=*` 放行任意来源；
+  想收紧就在 `.env` 里填白名单（逗号分隔，填官网域名），预检请求返回 204。
 
 ## 接入 GitHub Actions
 

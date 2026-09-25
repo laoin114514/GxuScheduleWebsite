@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview --port 4173"
+    "preview": "vite preview --port 4173",
+    "check:api": "node scripts/check-release.mjs"
   },
   "dependencies": {
     "vue": "^3.5.13"

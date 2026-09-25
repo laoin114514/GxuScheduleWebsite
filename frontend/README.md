@@ -81,10 +81,19 @@ npm run preview    # 本地预览 dist/
     "downloadUrl": "https://cdn.example.com/release/schedule/107060/xxx.apk",
     "sha256": "…",
     "fileSize": 38689642,
-    "forced": false
+    "forced": false,
+    "publishedAt": "2026-08-31T15:00:47Z",
+    "fileName": "GxuScheduleAPP-release-1.7.6-universal.apk"
   }
 }
 ```
+
+下载区展示的每个字段都来自这里：版本号 → `latestVersionName`，更新日期 → `publishedAt`（格式化成
+`YYYY-MM-DD`），体积 → `fileSize`，更新日志 → `changelog`，下载按钮直链 → `downloadUrl`，
+安装包名 → `fileName`。
+
+> `publishedAt` / `fileName` 是后端 v1.1 起新增的字段（见 [`website/README.md`](../README.md)）。
+> 老版本后端不返回它们时页面不会报错，只是不显示日期与文件名。
 
 ### 环境变量
 
@@ -94,14 +103,64 @@ npm run preview    # 本地预览 dist/
 |---|---|---|
 | `VITE_API_BASE_URL` | 空（同源 `/api`） | 更新服务地址；留空时走同源，生产环境建议用 Nginx 反代 |
 | `VITE_APP_KEY` | `schedule` | 与上传 workflow 的 `appKey` 保持一致 |
-| `VITE_PROXY_TARGET` | `http://localhost:8080` | **仅开发用**，Vite dev server 的代理目标 |
+| `VITE_PROXY_TARGET` | `http://localhost:8080` | `npm run dev` 与 `npm run preview` 的 `/api` 代理目标 |
 | `VITE_SHOT_*` | 空 | 真实截图覆盖，见下节 |
 
-### 兜底策略
+`.env.local`（已被 gitignore 忽略）优先级高于 `.env`，本地临时换 appKey / 指向别的后端时用它。
 
-`useRelease()` 在接口失败（离线、后端未部署、CORS、超时 8s）时**自动回退**到
-`src/config/site.js` 的 `fallbackRelease`，页面照常展示版本号、体积与更新日志，
-不会出现空白或报错。区块根节点带 `data-release-source="api|fallback"`，方便排查。
+### 三种数据来源与兜底
+
+`useRelease()` 把结果分成三种，组件根节点上的 `data-release-source` 会如实标出，方便排查：
+
+| source | 触发条件 | 页面表现 |
+|---|---|---|
+| `api` | 接口通了，且该 appKey 有发布记录（`latestVersionCode > 0`） | 版本号 / 日期 / 体积 / 更新日志 / 下载直链**全部以接口为准** |
+| `empty` | 接口通了，但该 appKey 还没发过版（全新 appKey） | 退回 `src/config/site.js` 的内置信息，按钮指向 GitHub Releases |
+| `fallback` | 接口不通（离线 / 未部署 / 跨域被拦 / 超时 5s） | 同上 |
+
+两条原则：
+
+1. **接口活着时，接口没给的字段就不展示。** 比如后端没填 `changelog`、老版本不返回 `publishedAt`，
+   页面会隐藏对应内容，而不是拿内置数据去凑 —— 否则会出现「版本号是新的、日期是旧的」这种错配。
+2. **接口不可达时绝不开天窗。** 内置数据保证官网永远有可点的下载按钮（落到 Releases 页）。
+   接口加载中时，版本信息行显示「正在获取最新版本…」。
+
+跨域提醒：官网与更新服务不同域时（如 GitHub Pages + 独立后端），后端需要放行来源，
+见 [`website/README.md`](../README.md) 的 `CORS_ALLOW_ORIGINS`。
+
+### 为什么下载按钮跳到了 GitHub Releases
+
+按钮指向 Releases，**只可能是前端没拿到可用的 `downloadUrl`**。一条命令定位：
+
+```bash
+npm run check:api -- --base=https://你的更新服务地址
+```
+
+它会打印接口返回的每个字段、CORS 头以及最终结论。四种典型结果与对应处理：
+
+| 检查输出 | 原因 | 处理 |
+|---|---|---|
+| `HTTP 404 text/html` | 请求打到了静态托管（GitHub Pages 等），那里没有后端 | 构建时设 `VITE_API_BASE_URL=https://更新服务域名` 后重新构建部署；或改用 Nginx 同源反代 |
+| `latestVersionCode = 0` | 接口通了，但该 appKey 还没有发布记录 | 推 tag 触发 `release.yml` 上传；并确认 secrets 里配了 `UPDATE_SERVER_URL` / `UPDATE_SERVER_API_KEY`（未配会打 warning 直接跳过） |
+| 缺 `Access-Control-Allow-Origin` | 后端没放行官网域名 | 后端 `.env` 设 `CORS_ALLOW_ORIGINS=https://官网域名` 后重启服务 |
+| 接口不通 / 超时 | 后端没起、域名写错、被限流 | 本地先 `cd website && go run .`；确认 `RATE_LIMIT_RPS` 不是太小 |
+
+页面上也留了线索：下载区根节点带 `data-release-source="api|empty|fallback"`；
+下载按钮的 `title` 会写明「安装包来自更新服务」或「跳转 GitHub Releases」；
+回退时浏览器控制台会打一条 `[西大课栈] 更新服务不可用…` 警告。
+
+### 本地联调
+
+```bash
+# 终端 1：起更新服务（需要 MySQL 与 OSS 配置）
+cd website && go run .
+
+# 终端 2：起官网，/api 自动代理到 8080
+cd website/frontend && npm run dev     # 或 npm run preview（也已配好代理）
+```
+
+打开页面后看下载区：`data-release-source` 为 `api` 即代表真的读到了后端数据
+（用 `.env.local` 写 `VITE_APP_KEY=<有发布记录的 appKey>` 可以在本地库里没有 `schedule` 记录时验证）。
 
 > 官网请求 `versionCode=0`，因此后端永远返回最新版本，无需与 App 上报口径对齐。
 
@@ -189,12 +248,22 @@ server {
 
 这样前端用同源 `/api`，`VITE_API_BASE_URL` 留空即可，不存在跨域问题。
 
-### 2. GitHub Pages
+### 2. GitHub Pages 等纯静态托管
 
 `vite.config.js` 里 `base: './'`，产物可直接放到任意子路径（如
-`https://<user>.github.io/GxuScheduleAPP/`）。把 `dist/` 内容提交到 Pages 分支，
-或改用 GitHub Actions 构建后上传 `dist`。跨域时把 `VITE_API_BASE_URL` 指向更新服务域名
-（后端需允许该来源，或直接用方案 1）。
+`https://<user>.github.io/GxuScheduleAPP/`）。
+
+> ⚠️ 静态托管**没有** `/api` 反向代理。若 `VITE_API_BASE_URL` 留空，`/api/v1/...` 会打到 GitHub Pages
+> 自己（返回 404 + HTML），下载按钮就永远只能跳 Releases。在静态托管上必须三步都做：
+>
+> 1. 构建时指定后端地址：`VITE_API_BASE_URL=https://你的更新服务域名 npm run build`
+> 2. 后端 `.env` 放行该来源：`CORS_ALLOW_ORIGINS=https://<user>.github.io`，然后重启服务
+> 3. 部署后用 `npm run check:api -- --base=https://你的更新服务域名`，并在浏览器里确认下载区
+>    `data-release-source="api"`
+>
+> 注意 `VITE_API_BASE_URL` 是**构建期**注入的，改了必须重新构建再部署。
+
+不想处理跨域就用方案 1（Nginx 同源反代），官网与接口同域最省事。
 
 ## 与设计稿的差异（有意为之）
 

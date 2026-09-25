@@ -2,6 +2,14 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
+// 开发 / 预览时把 /api 代理到 Go 更新服务（默认 http://localhost:8080）
+const proxy = {
+  '/api': {
+    target: process.env.VITE_PROXY_TARGET || 'http://localhost:8080',
+    changeOrigin: true,
+  },
+}
+
 // base 用相对路径，方便直接丢到 GitHub Pages 子目录或任意静态托管
 export default defineConfig({
   plugins: [vue()],
@@ -13,13 +21,12 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    // 开发时把 /api 代理到 Go 更新服务（默认 http://localhost:8080）
-    proxy: {
-      '/api': {
-        target: process.env.VITE_PROXY_TARGET || 'http://localhost:8080',
-        changeOrigin: true,
-      },
-    },
+    proxy,
+  },
+  // preview 也要代理，否则 npm run preview 时 /api 会 404 直接走兜底数据
+  preview: {
+    port: 4173,
+    proxy,
   },
   build: {
     outDir: 'dist',

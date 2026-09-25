@@ -15,6 +15,7 @@ export const APP_KEY = import.meta.env.VITE_APP_KEY || 'schedule'
 export function fetchLatestRelease() {
   return request('/api/v1/apps/' + encodeURIComponent(APP_KEY) + '/latest', {
     query: { versionCode: 0 },
-    timeout: 8000,
+    // 落地页不适合长时间等待；超时后走内置兜底，按钮落到 GitHub Releases
+    timeout: 5000,
   })
 }

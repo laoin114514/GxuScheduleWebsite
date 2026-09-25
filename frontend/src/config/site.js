@@ -35,8 +35,8 @@ export const links = {
 }
 
 export const navLinks = [
-  { href: '#features', label: '核心卖点' },
-  { href: '#schedule-preview', label: '课表交互' },
+  // { href: '#features', label: '核心卖点' },
+  // { href: '#schedule-preview', label: '课表交互' },
   { href: '#widgets', label: '桌面小组件' },
   { href: '#tools', label: '学习工具集' },
   { href: '#open-source', label: '开源理念' },
