@@ -5,7 +5,12 @@
  */
 const RAW_BASE = (import.meta.env.VITE_API_BASE_URL || '').trim()
 
-export const API_BASE = RAW_BASE.replace(/\/+$/, '')
+// 没配 VITE_API_BASE_URL 时，用「相对基址」而不是写死 /api：
+// 官网挂在子路径下（例如 https://host/schedule/）时，'./api/v1/...' 会解析成
+// https://host/schedule/api/v1/...，与反向代理的挂载点一致；挂在根路径时同样正确。
+const FALLBACK_BASE = import.meta.env.BASE_URL || '/'
+
+export const API_BASE = (RAW_BASE || FALLBACK_BASE).replace(/\/+$/, '')
 
 export class ApiError extends Error {
   constructor(message, status, code) {
