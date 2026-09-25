@@ -31,6 +31,8 @@ services:
     environment:
       # 容器内监听固定 8080，避免和宿主映射端口混淆
       SERVER_PORT: "8080"
+      # 显式指定前端产物目录（优先于 env_file，防止 .env 里的空值把镜像 ENV 覆盖掉）
+      WEB_DIR: ${WEB_DIR:-/app/web}
       TZ: ${TZ:-Asia/Shanghai}
       # environment 优先级高于 env_file，这里把数据源指向 compose 内的 mysql 服务
       DB_HOST: ${COMPOSE_DB_HOST:-mysql}
