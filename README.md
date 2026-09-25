@@ -5,6 +5,7 @@
 - `POST /api/v1/releases/upload` —— GitHub Actions 发版时上传 APK（API Key 鉴权）
 - `GET /api/v1/apps/{appKey}/latest?versionCode=xxx` —— App 检查最新版本（公开，限流）
 - `GET /healthz` —— 健康检查（Docker healthcheck 用）
+- `GET /` —— 官网介绍页（前端构建产物，由本服务同源静态托管，见下文）
 
 ## 部署（Docker Compose，国内源）
 
@@ -192,21 +193,56 @@ docker compose up -d mysql
 
 用本机安装的 MySQL 也可以，建好 `DB_NAME` 对应的库后 `go run .` 即可。
 
-## 前端官网（`frontend/`）
+## 官网与一键启动（`frontend/` + 静态托管）
 
-仓库里的 `website/frontend` 是西大课栈的官网介绍页（Vue 3 + Vite + Tailwind），
-通过下面这个公开接口拿最新版本信息：
-
-    GET /api/v1/apps/schedule/latest?versionCode=0
-
-接口不可用时会自动回退到静态兜底数据，因此前后端可以分别部署。
+官网是 `website/frontend` 下的 Vue 3 + Vite + Tailwind 单页站，构建产物由本服务**同源静态托管**，
+所以一条 compose 命令就能同时起接口和官网，也不用处理跨域：
 
 ```bash
-cd website/frontend
-npm install
-npm run dev      # http://localhost:5173，/api 已代理到 http://localhost:8080
-npm run build    # 产出 dist/，交给 Nginx 托管即可
+docker compose up -d --build
+
+# 官网      http://<host>:<HOST_PORT>/
+# 更新接口  http://<host>:<HOST_PORT>/api/v1/apps/schedule/latest?versionCode=0
+# 健康检查  http://<host>:<HOST_PORT>/healthz
 ```
 
-部署、环境变量、真实截图占位等细节见 [`frontend/README.md`](frontend/README.md)。
+镜像由 [`Dockerfile`](Dockerfile) 三阶段构建：
+
+1. `node:22-alpine` → `npm ci && npm run build` 产出 `dist`
+2. `golang:1.22-alpine` → 编译 `schedule-server`
+3. `alpine` → 二进制 + 前端产物（放到 `/app/web`，启动时 `WEB_DIR=/app/web`）
+
+静态托管逻辑在 [`internal/web/static.go`](internal/web/static.go)：
+
+- 命中真实文件直接返回：`assets/*` 带 `immutable` 长缓存，其它静态资源 1 小时
+- 其它 GET 回退 `index.html`（SPA）；入口 HTML 是 `no-cache`，发版后刷新即生效
+- 未匹配到的 `/api/...` 返回 JSON 404，不会把 HTML 喂给前端
+- `WEB_DIR` 为空或目录不存在时不注册，保持纯接口服务（只部署 App 后端时行为不变）
+
+### 构建参数
+
+| 参数 | 默认 | 说明 |
+|---|---|---|
+| `VITE_APP_KEY` | `schedule` | 与上传 workflow 的 `appKey` 一致 |
+| `VITE_API_BASE_URL` | 空 | 留空 = 请求同源 `/api`；只有官网单独部署到别的域名时才需要填 |
+
+需要覆盖官网里的真实截图时，把 `VITE_SHOT_*` 写进 `frontend/.env.production` 再重新构建
+（该文件会随构建上下文进镜像）。
+
+### 不用 Docker 的等价跑法
+
+```bash
+cd website/frontend && npm install && npm run build
+cd website && WEB_DIR=frontend/dist go run .
+# 打开 http://localhost:8080/ 就是官网，接口在同一端口
+```
+
+前端单独开发（热更新 + `/api` 自动代理）：
+
+```bash
+cd website/frontend && npm run dev     # http://localhost:5173
+```
+
+官网细节（文案、课表数据、主题、截图占位、`npm run check:api` 体检）见
+[`frontend/README.md`](frontend/README.md)。
 

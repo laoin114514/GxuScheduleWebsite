@@ -41,6 +41,9 @@ type Config struct {
 
 	// CORSAllowOrigins 允许跨域读取公开接口的来源；含 "*" 表示不限制。
 	CORSAllowOrigins []string
+
+	// WebDir 前端构建产物目录；非空且存在时由本服务静态托管（同源，无需 CORS）。
+	WebDir string
 }
 
 func Load() (*Config, error) {
@@ -68,6 +71,7 @@ func Load() (*Config, error) {
 		RateLimitRPS:       envFloat("RATE_LIMIT_RPS", 2),
 		RateLimitBurst:     envInt("RATE_LIMIT_BURST", 10),
 		CORSAllowOrigins:   envList("CORS_ALLOW_ORIGINS", "*"),
+		WebDir:             strings.TrimSpace(os.Getenv("WEB_DIR")),
 	}
 	if err := cfg.validate(); err != nil {
 		return nil, err

@@ -1,0 +1,14 @@
+# 版本控制与本地配置
+.git
+.gitignore
+.env
+.env.local
+
+# 前端：依赖和产物都在镜像内重新生成，不要把宿主的带进构建上下文
+frontend/node_modules
+frontend/dist
+frontend/design
+frontend/.env.local
+
+# 大文件：构建与运行时都不需要
+*.apk

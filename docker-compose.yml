@@ -1,3 +1,7 @@
+# 一键起服务 + 官网：docker compose up -d --build
+#   http://<host>:<HOST_PORT>/        官网（前端构建产物由 Go 静态托管）
+#   http://<host>:<HOST_PORT>/api/v1/ 更新服务接口
+#
 # app 单独起：MySQL 已由独立栈 /root/SharedMySQL 统一提供（接入其 external 网络
 # shared_mysql，服务别名 mysql）。
 # 本文件不再自带 mysql 服务；数据在原 server_mysql-data 卷里留作回滚。
@@ -8,7 +12,15 @@
 # 并只起 app：docker compose up -d --no-deps app
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # 官网与接口同源（Go 直接托管前端产物），这两个参数通常不用改：
+        #   VITE_APP_KEY        —— 与上传 workflow 的 appKey 一致
+        #   VITE_API_BASE_URL   —— 留空 = 请求同源 /api；只有官网单独部署到别的域名时才需要填
+        VITE_APP_KEY: ${VITE_APP_KEY:-schedule}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
     container_name: schedule-server
     restart: unless-stopped
     ports:
