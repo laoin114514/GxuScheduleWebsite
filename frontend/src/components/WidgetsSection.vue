@@ -3,7 +3,7 @@
     <div class="text-center max-w-2xl mx-auto mb-12">
       <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">桌面小组件专区</h2>
       <p class="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-400">
-        不用点开 App，抬眼就知道下节课在哪。4 款精雕细琢的 Android 原生微件。
+        不用点开 App，抬眼就知道下节课在哪。6 款 Android 原生微件，下方为其中 4 款示意。
       </p>
     </div>
 
@@ -77,10 +77,10 @@
           <span class="text-[10px] text-slate-400">紧凑条形</span>
         </div>
 
-        <ScreenshotSlot :src="shot('widgetUpcoming')" alt="近日课程小组件" img-class="object-cover object-top rounded-xl w-full h-32">
+        <ScreenshotSlot :src="shot('widgetUpcoming')" alt="下一门课小组件" img-class="object-cover object-top rounded-xl w-full h-32">
           <div class="my-4">
             <div class="text-xs font-semibold text-slate-900 dark:text-white flex items-center justify-between">
-              <span>下一门课提醒</span>
+              <span>下一门课</span>
               <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200">20 分钟后</span>
             </div>
             <div class="mt-2 text-sm font-bold text-slate-900 dark:text-white">大学英语(IV)</div>
@@ -88,7 +88,7 @@
           </div>
         </ScreenshotSlot>
 
-        <div class="text-[11px] text-slate-400 pt-2 border-t border-slate-200/60 dark:border-slate-800">近日课程轻量条</div>
+        <div class="text-[11px] text-slate-400 pt-2 border-t border-slate-200/60 dark:border-slate-800">下一门课组件</div>
       </div>
 
       <!-- 组件 4：一周课程全览 -->
@@ -108,7 +108,7 @@
               <div class="p-1 rounded bg-blue-100/70 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200">四<br />2节</div>
               <div class="p-1 rounded bg-blue-100/70 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200">五<br />1节</div>
             </div>
-            <p class="text-[11px] text-slate-500 mt-3 leading-relaxed">直接在主屏幕拖拽滑动，双指还可局部缩放课格密度。</p>
+            <p class="text-[11px] text-slate-500 mt-3 leading-relaxed">点击组件即可打开 App 查看完整课表。</p>
           </div>
         </ScreenshotSlot>
 

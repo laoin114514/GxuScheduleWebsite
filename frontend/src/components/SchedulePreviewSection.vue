@@ -1,9 +1,9 @@
 <template>
   <section id="schedule-preview" v-reveal class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="text-center max-w-2xl mx-auto mb-10">
-      <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">同一张课表，五种样子</h2>
+      <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">同一张课表，深浅两种样子</h2>
       <p class="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-400">
-        点击下方色板，感受课程卡与界面强调色的平滑过渡。真实 App 支持深浅色自动跟随与 14 款定制背景。
+        点击下方色板，感受课程卡与界面强调色的平滑过渡。真实 App 支持浅色 / 深色 / 跟随系统，并可按自定义时间自动切换。
       </p>
 
       <div class="flex items-center justify-center space-x-4 mt-6 p-2 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-md inline-flex border border-slate-200/80 dark:border-slate-700/80">

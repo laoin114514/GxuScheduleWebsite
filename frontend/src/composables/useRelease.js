@@ -83,9 +83,11 @@ export function useRelease() {
     return '更新服务不可用，跳转 GitHub Releases'
   })
 
-  const versionName = computed(() =>
-    apiData.value ? apiData.value.latestVersionName : fallbackRelease.versionName
-  )
+  // 后端返回的 versionName 可能自带 v 前缀（如 v0.4.2），模板里已固定渲染 "v{{ versionName }}"
+  const versionName = computed(() => {
+    const raw = apiData.value ? apiData.value.latestVersionName : fallbackRelease.versionName
+    return String(raw || '').replace(/^v/i, '')
+  })
 
   const versionCode = computed(() =>
     apiData.value ? apiData.value.latestVersionCode : fallbackRelease.versionCode

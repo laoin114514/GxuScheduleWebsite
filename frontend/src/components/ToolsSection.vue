@@ -1,9 +1,9 @@
 <template>
   <section id="tools" v-reveal class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="text-center max-w-2xl mx-auto mb-12">
-      <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">一揽子校园学习工具集</h2>
+      <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">查分、看考场、算绩点</h2>
       <p class="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-400">
-        围绕西大学生核心动线，成绩、绩点、教室、借书，通通装进一个口袋。
+        常用的教务查询与计算，都收在「工具」页里。
       </p>
     </div>
 

@@ -4,7 +4,7 @@
       <div class="max-w-3xl">
         <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-medium mb-4">
           <IconCheckCircle class="w-3.5 h-3.5" />
-          <span>无服务器中间人 · 数据 100% 留存在手机本地</span>
+          <span>无第三方账号体系 · 数据保存在手机本地</span>
         </div>
 
         <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
@@ -12,7 +12,7 @@
         </h2>
         <p class="mt-3 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
           没有商业打扰，没有弹窗推销。基于历史优秀开源项目二次开发，所有代码完全公开透明，
-          教务账密直接在手机本地加密存入 Room 数据库与教务对接，不经任何第三方中转。
+          教务账密保存在手机本地应用私有数据库中，课表与成绩请求直连学校官方教务接口，不经过第三方中转。
         </p>
       </div>
 
