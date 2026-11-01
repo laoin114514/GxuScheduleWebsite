@@ -144,10 +144,12 @@ curl "https://your-domain/api/v1/apps/schedule/latest?versionCode=10706"
 ## 接入 GitHub Actions
 
 在 `release.yml` 的"Extract release notes from tag"步骤之后、发布 GitHub Release 之前插入
-（软失败：后端临时故障不阻断官方 Release）：
+（`continue-on-error` 软失败：后端临时故障不阻断官方 Release；GitHub Release 之后再用一步把上传失败标红）：
 
 ```yaml
-      - name: Upload universal APK to update server（软失败）
+      - name: Upload universal APK to update server
+        id: update_server
+        continue-on-error: true
         env:
           UPDATE_SERVER_URL: ${{ secrets.UPDATE_SERVER_URL }}
           UPDATE_SERVER_API_KEY: ${{ secrets.UPDATE_SERVER_API_KEY }}
@@ -159,15 +161,26 @@ curl "https://your-domain/api/v1/apps/schedule/latest?versionCode=10706"
           fi
           # versionCode 口径见下方说明：必须是 tag 派生值的 10 倍（universal 口径）
           UNIVERSAL_VERSION_CODE=$(( ${{ steps.version.outputs.VERSION_CODE }} * 10 ))
-          curl -sS -X POST "${UPDATE_SERVER_URL}/api/v1/releases/upload" \
+          curl -sS --fail-with-body \
+            --retry 3 --retry-all-errors --retry-delay 3 --retry-max-time 600 \
+            -X POST "${UPDATE_SERVER_URL}/api/v1/releases/upload" \
             -H "X-API-Key: ${UPDATE_SERVER_API_KEY}" \
             -F "appKey=schedule" \
             -F "versionCode=${UNIVERSAL_VERSION_CODE}" \
             -F "versionName=${{ steps.version.outputs.VERSION }}" \
             -F "name=西大课栈" \
             -F "changelog=${{ steps.release_notes.outputs.notes }}" \
-            -F "file=@${UNIVERSAL_APK}" \
-            || echo "::warning::上传更新服务器失败(忽略，GitHub Release 已正常发布)"
+            -F "file=@${UNIVERSAL_APK}"
+```
+
+再在 GitHub Release 步骤之后追加失败检查：
+
+```yaml
+      - name: Fail if update server upload failed
+        if: steps.update_server.outcome == 'failure'
+        run: |
+          echo "::error::更新服务器上传失败；GitHub Release 已发布，请检查日志后重试或手动补传"
+          exit 1
 ```
 
 需要在仓库 Settings → Secrets 里配置：
