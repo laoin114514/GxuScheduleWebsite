@@ -65,8 +65,19 @@ func Register(r *gin.Engine, dir string) bool {
 			}
 		}
 
+		// 带内容哈希的静态资源缺失时必须返回 404，不能回退 index.html：
+		// 浏览器会把这段 HTML 当 JS/CSS 执行，页面直接空白；CDN 还会把这个
+		// 200 HTML 按资源 URL 缓存，即使文件随后上传，也要等 TTL 过期才恢复。
+		if strings.HasPrefix(rel, "assets/") {
+			c.Header("Cache-Control", "no-store")
+			c.Status(http.StatusNotFound)
+			return
+		}
+
 		// SPA 回退：入口 HTML 不缓存，发版后刷新即可生效
-		c.Header("Cache-Control", "no-cache")
+		c.Header("Cache-Control", "no-store, max-age=0")
+		c.Header("Pragma", "no-cache")
+		c.Header("Expires", "0")
 		c.File(indexFile)
 	})
 
