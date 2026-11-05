@@ -24,7 +24,8 @@ export const links = {
   repo: 'https://github.com/laoin114514/GxuScheduleAPP',
   releases: 'https://github.com/laoin114514/GxuScheduleAPP/releases',
   issues: 'https://github.com/laoin114514/GxuScheduleAPP/issues',
-  mailto: 'mailto:2908451607@qq.com',
+  /** 问题反馈问卷（与 App「我的 → 反馈建议」指向同一份腾讯问卷） */
+  survey: 'https://wj.qq.com/s2/28554281/u3po/',
   license: 'Apache-2.0',
 }
 

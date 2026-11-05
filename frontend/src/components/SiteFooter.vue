@@ -9,7 +9,7 @@
           </div>
           <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{{ site.tagline }}</p>
           <div class="text-[11px] text-slate-400">
-            问题反馈：<a :href="links.mailto" class="hover:text-blue-500 underline font-mono">{{ site.email }}</a>
+            问题反馈：<a :href="links.survey" target="_blank" rel="noopener noreferrer" class="hover:text-blue-500 underline">在线问卷</a>
           </div>
         </div>
 
