@@ -76,3 +76,11 @@ func (c *Client) URL(key string) (string, error) {
 	}
 	return url, nil
 }
+
+// DeleteObject 删除对象（上传半失败时回滚用；对象不存在时 OSS 也按成功处理）。
+func (c *Client) DeleteObject(key string) error {
+	if c.bucket == nil {
+		return fmt.Errorf("oss bucket not initialized")
+	}
+	return c.bucket.DeleteObject(key)
+}

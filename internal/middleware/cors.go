@@ -37,8 +37,11 @@ func CORS(allowOrigins []string) gin.HandlerFunc {
 				c.Header("Vary", "Origin")
 			}
 		}
-		c.Header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Content-Type, X-API-Key")
+		// 公开接口只需要 GET/POST；PATCH/DELETE 与 admin 头是给浏览器管理台预留的
+		// （admin API 目前主要给 curl/CI 用，预检不通过也不影响 cURL）。
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
+		c.Header("Access-Control-Allow-Headers", "Content-Type, X-API-Key, Authorization, X-Admin-Key, X-Request-ID")
+		c.Header("Access-Control-Expose-Headers", "X-Request-ID")
 		c.Header("Access-Control-Max-Age", "600")
 
 		// 预检请求直接返回，不进业务

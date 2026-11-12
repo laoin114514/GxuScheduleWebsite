@@ -59,12 +59,12 @@ func (l *IPRateLimiter) gc() {
 	}
 }
 
-// RateLimit 中间件：每 IP 超出配额返回 429。
+// RateLimit 中间件：每 IP 超出配额返回 429（带稳定 errorCode，便于脚本区分）。
 func RateLimit(l *IPRateLimiter) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !l.Allow(c.ClientIP()) {
 			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
-				"code": 429, "message": "too many requests",
+				"code": 429, "errorCode": "RATE_LIMITED", "message": "too many requests",
 			})
 			return
 		}
