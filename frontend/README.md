@@ -102,7 +102,7 @@ npm run preview    # 本地预览 dist/
 | 变量 | 默认 | 说明 |
 |---|---|---|
 | `VITE_API_BASE_URL` | 空（同源 `/api`） | 更新服务地址；留空时走同源，生产环境建议用 Nginx 反代 |
-| `VITE_APP_KEY` | `schedule` | 与上传 workflow 的 `appKey` 保持一致 |
+| `VITE_APP_KEY` | `schedule` | 官网读取的渠道 appKey（公开 latest 接口无需上传 key；上传用每渠道专属 key） |
 | `VITE_PROXY_TARGET` | `http://localhost:8080` | `npm run dev` 与 `npm run preview` 的 `/api` 代理目标 |
 | `VITE_SHOT_*` | 空 | 真实截图覆盖，见下节 |
 
@@ -141,7 +141,7 @@ npm run check:api -- --base=https://你的更新服务地址
 | 检查输出 | 原因 | 处理 |
 |---|---|---|
 | `HTTP 404 text/html` | 请求打到了静态托管（GitHub Pages 等），那里没有后端 | 构建时设 `VITE_API_BASE_URL=https://更新服务域名` 后重新构建部署；或改用 Nginx 同源反代 |
-| `latestVersionCode = 0` | 接口通了，但该 appKey 还没有发布记录 | 推 tag 触发 `release.yml` 上传；并确认 secrets 里配了 `UPDATE_SERVER_URL` / `UPDATE_SERVER_API_KEY`（未配会打 warning 直接跳过） |
+| `latestVersionCode = 0` | 接口通了，但该 appKey 还没有发布记录（或该渠道的 release 都被下架了） | 推 tag 触发 `release.yml` 上传；并确认 secrets 里配了 `UPDATE_SERVER_URL` / `SCHEDULE_UPLOAD_KEY`（未配会打 warning 直接跳过；旧 `UPDATE_SERVER_API_KEY` 仅迁移兼容） |
 | 缺 `Access-Control-Allow-Origin` | 后端没放行官网域名 | 后端 `.env` 设 `CORS_ALLOW_ORIGINS=https://官网域名` 后重启服务 |
 | 接口不通 / 超时 | 后端没起、域名写错、被限流 | 本地先 `cd website && go run .`；确认 `RATE_LIMIT_RPS` 不是太小 |
 
