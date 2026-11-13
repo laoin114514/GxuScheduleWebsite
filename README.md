@@ -252,12 +252,12 @@ curl "https://your-domain/api/v1/apps/schedule/latest?versionCode=10706"
         continue-on-error: true
         env:
           UPDATE_SERVER_URL: ${{ secrets.UPDATE_SERVER_URL }}
-          UPDATE_SERVER_API_KEY: ${{ secrets.SCHEDULE_UPLOAD_KEY }}
+          SCHEDULE_UPLOAD_KEY: ${{ secrets.SCHEDULE_UPLOAD_KEY }}
         run: |
           UNIVERSAL_APK=$(ls app/build/outputs/apk/release/*-universal.apk | head -1)
           curl -sS --fail-with-body --retry 3 --retry-all-errors \
             -X POST "${UPDATE_SERVER_URL}/api/v1/releases/upload" \
-            -H "X-API-Key: ${UPDATE_SERVER_API_KEY}" \
+            -H "X-API-Key: ${SCHEDULE_UPLOAD_KEY}" \
             -F "appKey=schedule" \
             -F "versionCode=${{ steps.version.outputs.VERSION_CODE }}0" \
             -F "versionName=${{ steps.version.outputs.VERSION }}" \
