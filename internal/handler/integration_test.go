@@ -85,7 +85,6 @@ func testConfig() *config.Config {
 	return &config.Config{
 		AppEnv:                  "test",
 		AdminAPIKeys:            []string{testAdminKey},
-		UploadAuthMode:          config.UploadAuthScoped,
 		MaxUploadMB:             512,
 		DefaultDailyUploadLimit: 20,
 		RateLimitRPS:            1000,
@@ -579,33 +578,5 @@ func TestPerAppUploadKeysEndToEnd(t *testing.T) {
 				t.Fatalf("audit logs missing action %q, got %v", want, actions)
 			}
 		}
-	})
-
-	t.Run("dual 模式：旧全局 key 受 appKey 白名单限制", func(t *testing.T) {
-		dualCfg := testConfig()
-		dualCfg.UploadAuthMode = config.UploadAuthDual
-		dualCfg.LegacyUploadAPIKey = "legacy-global-key-0123456789"
-		dualCfg.LegacyUploadAppKeys = []string{testAppKey}
-		dualRouter := newEngine(t, db, dualCfg, store)
-
-		w, resp := uploadRelease(t, dualRouter, uploadOptions{
-			apiKey: dualCfg.LegacyUploadAPIKey, appKey: testAppKey, version: 108, name: "1.0.8",
-			fileName: "app-108.apk", content: []byte("APK-108"),
-		})
-		wantOK(t, "legacy key upload", w, resp)
-
-		// 旧 key 不能上传白名单外的 appKey。
-		w, resp = uploadRelease(t, dualRouter, uploadOptions{
-			apiKey: dualCfg.LegacyUploadAPIKey, appKey: "other-app", version: 1, name: "0.0.1",
-			fileName: "other.apk", content: []byte("OTHER"),
-		})
-		wantErr(t, "legacy key outside allowlist", w, resp, http.StatusForbidden, "LEGACY_KEY_APP_NOT_ALLOWED")
-
-		// admin key 不能当上传 key 用（scoped/dual 都一样）。
-		w, resp = uploadRelease(t, dualRouter, uploadOptions{
-			apiKey: dualCfg.AdminAPIKeys[0], appKey: testAppKey, version: 109, name: "1.0.9",
-			fileName: "app-109.apk", content: []byte("APK-109"),
-		})
-		wantErr(t, "admin key as upload key", w, resp, http.StatusUnauthorized, "INVALID_API_KEY")
 	})
 }

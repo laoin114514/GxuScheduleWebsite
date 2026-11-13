@@ -25,7 +25,6 @@ func newTestRouter(t *testing.T) *gin.Engine {
 	cfg := &config.Config{
 		AppEnv:                  "test",
 		AdminAPIKeys:            []string{testAdminKey},
-		UploadAuthMode:          config.UploadAuthScoped,
 		RateLimitRPS:            0.5,
 		RateLimitBurst:          3,
 		UploadRateRPS:           1,
@@ -97,9 +96,6 @@ func TestHealthz(t *testing.T) {
 	payload := decodeJSON(t, w)
 	if payload["status"] != "ok" {
 		t.Fatalf("healthz status = %v, want ok", payload["status"])
-	}
-	if payload["authMode"] != config.UploadAuthScoped {
-		t.Fatalf("healthz authMode = %v, want %s", payload["authMode"], config.UploadAuthScoped)
 	}
 	if _, ok := payload["web"]; !ok {
 		t.Fatalf("healthz missing web field, body=%s", w.Body.String())

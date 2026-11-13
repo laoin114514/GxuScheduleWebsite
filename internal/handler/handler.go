@@ -124,10 +124,9 @@ type releaseView struct {
 
 // uploadActor 鉴权成功后的上传身份。
 type uploadActor struct {
-	actorType   string // app / legacy
 	app         *model.App
 	key         *model.AppUploadKey
-	uploadKeyID uint   // 落库到 release.upload_key_id；legacy 为 0
+	uploadKeyID uint   // 落库到 release.upload_key_id
 	publicKeyID string // 审计用公开 keyID
 }
 
@@ -394,37 +393,15 @@ func (h *Handler) UploadRelease(c *gin.Context) {
 	h.finishUploadSuccess(c, actor, release)
 }
 
-// authenticateUpload 按 UPLOAD_AUTH_MODE 校验上传 key，并在鉴权成功后做按 key/IP 限流。
+// authenticateUpload 校验 app 专属上传 key，成功后按 key 限流。
 // 失败时已写好响应，返回 false。
 func (h *Handler) authenticateUpload(c *gin.Context, raw string) (*uploadActor, bool) {
-	switch h.cfg.UploadAuthMode {
-	case config.UploadAuthLegacy:
-		// 回滚期：只认旧全局 key。
-		if !auth.ConstantTimeMatchAny([]string{h.cfg.LegacyUploadAPIKey}, raw) {
-			h.uploadDenied(c, nil, "", http.StatusUnauthorized, codeInvalidAPIKey, "无效的上传密钥", "legacy_key_mismatch")
-			return nil, false
-		}
-		return h.newLegacyActor(c)
-	case config.UploadAuthDual:
-		app, key, err := h.resolver.ResolveUploadKey(c.Request.Context(), raw)
-		if err == nil {
-			return h.newScopedActor(c, app, key)
-		}
-		// 只有「不是 app key」时才回退旧全局 key；revoked/expired/disabled 不回退。
-		if errors.Is(err, auth.ErrKeyNotFound) && h.cfg.UsesLegacyUploadKey() &&
-			auth.ConstantTimeMatchAny([]string{h.cfg.LegacyUploadAPIKey}, raw) {
-			return h.newLegacyActor(c)
-		}
+	app, key, err := h.resolver.ResolveUploadKey(c.Request.Context(), raw)
+	if err != nil {
 		h.uploadAuthFailed(c, err)
 		return nil, false
-	default: // scoped
-		app, key, err := h.resolver.ResolveUploadKey(c.Request.Context(), raw)
-		if err != nil {
-			h.uploadAuthFailed(c, err)
-			return nil, false
-		}
-		return h.newScopedActor(c, app, key)
 	}
+	return h.newScopedActor(c, app, key)
 }
 
 // uploadAuthFailed 把 resolver 的 sentinel error 映射成稳定的 HTTP 错误码。
@@ -453,7 +430,6 @@ func (h *Handler) newScopedActor(c *gin.Context, app *model.App, key *model.AppU
 		return nil, false
 	}
 	actor := &uploadActor{
-		actorType:   "app",
 		app:         app,
 		key:         key,
 		uploadKeyID: key.ID,
@@ -467,60 +443,15 @@ func (h *Handler) newScopedActor(c *gin.Context, app *model.App, key *model.AppU
 	return actor, true
 }
 
-// newLegacyActor 旧全局 key 鉴权成功：按客户端 IP 限流（多 app 共用一把 key，无法按 key 隔离）。
-func (h *Handler) newLegacyActor(c *gin.Context) (*uploadActor, bool) {
-	actor := &uploadActor{actorType: "legacy"}
-	if !h.uploadLimiter.Allow("legacy:" + c.ClientIP()) {
-		h.uploadDenied(c, actor, "", http.StatusTooManyRequests, codeRateLimited,
-			"上传过于频繁，请稍后重试", "rate_limited")
-		return nil, false
-	}
-	return actor, true
-}
-
-// resolveUploadApp 根据鉴权身份确定本次上传的 app（绝不自动创建 app、绝不改 app 名）。
+// resolveUploadApp 校验表单 appKey 与 key 绑定的 app 一致（绝不自动创建 app、绝不改 app 名）。
 func (h *Handler) resolveUploadApp(c *gin.Context, actor *uploadActor, formAppKey string) (*model.App, bool) {
-	if actor.actorType == "app" {
-		app := actor.app
-		if formAppKey != "" && formAppKey != app.AppKey {
-			h.uploadDenied(c, actor, app.AppKey, http.StatusForbidden, codeAppKeyMismatch,
-				fmt.Sprintf("appKey 与上传密钥绑定的应用不一致（该密钥属于 %s）", app.AppKey), "app_key_mismatch")
-			return nil, false
-		}
-		return app, true
-	}
-
-	// legacy 全局 key：必须显式指定 appKey，且受 UPLOAD_LEGACY_APPKEYS 白名单限制。
-	if formAppKey == "" {
-		h.uploadDenied(c, actor, "", http.StatusBadRequest, codeInvalidParam,
-			"legacy 上传密钥必须显式指定 appKey", "legacy_missing_app_key")
+	app := actor.app
+	if formAppKey != "" && formAppKey != app.AppKey {
+		h.uploadDenied(c, actor, app.AppKey, http.StatusForbidden, codeAppKeyMismatch,
+			fmt.Sprintf("appKey 与上传密钥绑定的应用不一致（该密钥属于 %s）", app.AppKey), "app_key_mismatch")
 		return nil, false
 	}
-	if !h.cfg.LegacyUploadAllows(formAppKey) {
-		h.uploadDenied(c, actor, formAppKey, http.StatusForbidden, codeLegacyKeyAppNotAllowed,
-			fmt.Sprintf("旧版全局上传密钥不允许发布 appKey=%s", formAppKey), "legacy_key_app_not_allowed")
-		return nil, false
-	}
-	if h.db == nil {
-		failInternal(c, "upload: resolve legacy app", errors.New("nil db"))
-		return nil, false
-	}
-	var app model.App
-	if err := h.db.Where("app_key = ?", formAppKey).First(&app).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			h.uploadDenied(c, actor, formAppKey, http.StatusForbidden, codeAppNotFound,
-				fmt.Sprintf("应用 %s 不存在；请先由管理员创建（上传接口不再自动建 app）", formAppKey), "legacy_app_not_found")
-			return nil, false
-		}
-		failInternal(c, "upload: query app", err)
-		return nil, false
-	}
-	if app.Status != model.AppStatusActive {
-		h.uploadDenied(c, actor, app.AppKey, http.StatusForbidden, codeAppDisabled,
-			"该应用已停用，禁止上传", "app_disabled")
-		return nil, false
-	}
-	return &app, true
+	return app, true
 }
 
 // finishUploadSuccess 生成下载地址、更新 key 最近使用时间并返回成功响应。
@@ -546,7 +477,7 @@ func (h *Handler) uploadDenied(c *gin.Context, actor *uploadActor, appKey string
 func (h *Handler) actorAudit(c *gin.Context, actor *uploadActor, action, appKey, targetType, targetID string, detail map[string]any) {
 	actorType, publicKeyID := "anonymous", ""
 	if actor != nil {
-		actorType = actor.actorType
+		actorType = "app"
 		publicKeyID = actor.publicKeyID
 	}
 	h.recordAudit(c, actorType, publicKeyID, action, appKey, targetType, targetID, auditDetail(detail))

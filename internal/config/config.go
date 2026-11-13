@@ -9,30 +9,14 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// 上传鉴权模式。
-const (
-	// UploadAuthScoped 只接受 app 专属上传 key（新部署默认）。
-	UploadAuthScoped = "scoped"
-	// UploadAuthDual 迁移期：先按 app 专属 key 解析，解析不到再回退旧全局 key。
-	UploadAuthDual = "dual"
-	// UploadAuthLegacy 回滚期：只接受旧全局 key（管理面 admin API 仍可用）。
-	UploadAuthLegacy = "legacy"
-)
-
 // Config 全部来自 .env(或容器环境变量),启动时校验必填项。
 type Config struct {
 	Port   string
 	AppEnv string
 
 	// AdminAPIKeys 管理面密钥（ADMIN_API_KEYS，逗号分隔；支持多把以便轮换）。
+	// 只用于 /api/v1/admin/*；上传接口只接受每个 app 的专属 key。
 	AdminAPIKeys []string
-	// UploadAuthMode 上传鉴权模式：scoped(默认) / dual / legacy。
-	UploadAuthMode string
-	// LegacyUploadAPIKey 旧版全局上传 key（UPLOAD_API_KEY）。仅 dual/legacy 模式使用。
-	LegacyUploadAPIKey string
-	// LegacyUploadAppKeys 迁移期旧全局 key 允许上传的 appKey 白名单
-	// （UPLOAD_LEGACY_APPKEYS，逗号分隔；为空表示不限制）。
-	LegacyUploadAppKeys []string
 
 	DBHost     string
 	DBPort     string
@@ -84,10 +68,7 @@ func Load() (*Config, error) {
 		Port:                    env("SERVER_PORT", "8080"),
 		AppEnv:                  env("APP_ENV", "development"),
 		AdminAPIKeys:            envList("ADMIN_API_KEYS", ""),
-		UploadAuthMode:          env("UPLOAD_AUTH_MODE", UploadAuthScoped),
-		LegacyUploadAPIKey:      strings.TrimSpace(os.Getenv("UPLOAD_API_KEY")),
-		LegacyUploadAppKeys:     envList("UPLOAD_LEGACY_APPKEYS", ""),
-		DBHost:                  os.Getenv("DB_HOST"),
+		DBHost:                  env("DB_HOST", "127.0.0.1"),
 		DBPort:                  env("DB_PORT", "3306"),
 		DBUser:                  os.Getenv("DB_USER"),
 		DBPassword:              os.Getenv("DB_PASSWORD"),
@@ -118,11 +99,6 @@ func Load() (*Config, error) {
 }
 
 func (c *Config) validate() error {
-	c.UploadAuthMode = strings.ToLower(strings.TrimSpace(c.UploadAuthMode))
-	if c.UploadAuthMode == "" {
-		c.UploadAuthMode = UploadAuthScoped
-	}
-
 	var errs []string
 	add := func(format string, args ...any) {
 		errs = append(errs, fmt.Sprintf(format, args...))
@@ -142,20 +118,6 @@ func (c *Config) validate() error {
 		if len(key) < 16 {
 			add("ADMIN_API_KEYS 第 %d 把长度过短（至少 16 字符，建议 openssl rand -hex 32）", i+1)
 		}
-		if c.LegacyUploadAPIKey != "" && key == c.LegacyUploadAPIKey {
-			add("ADMIN_API_KEYS 不能与 UPLOAD_API_KEY（legacy 上传 key）相同")
-		}
-	}
-
-	switch c.UploadAuthMode {
-	case UploadAuthScoped:
-		// 新部署：只需要 app 专属 key。
-	case UploadAuthDual, UploadAuthLegacy:
-		if c.LegacyUploadAPIKey == "" {
-			add("UPLOAD_AUTH_MODE=%s 时必须配置 UPLOAD_API_KEY（旧版全局上传 key）", c.UploadAuthMode)
-		}
-	default:
-		add("UPLOAD_AUTH_MODE 只能是 scoped/dual/legacy，当前 %q", c.UploadAuthMode)
 	}
 
 	must := func(key, val string) {
@@ -191,25 +153,6 @@ func (c *Config) validate() error {
 		return fmt.Errorf("%s", strings.Join(errs, "；"))
 	}
 	return nil
-}
-
-// LegacyUploadAllows 判断 legacy（旧全局）key 是否允许上传指定 appKey。
-// 白名单为空表示不限制（迁移期默认，配合 UPLOAD_LEGACY_APPKEYS 收紧）。
-func (c *Config) LegacyUploadAllows(appKey string) bool {
-	if len(c.LegacyUploadAppKeys) == 0 {
-		return true
-	}
-	for _, allowed := range c.LegacyUploadAppKeys {
-		if allowed == appKey {
-			return true
-		}
-	}
-	return false
-}
-
-// UsesLegacyUploadKey 当前模式是否接受旧全局上传 key。
-func (c *Config) UsesLegacyUploadKey() bool {
-	return c.UploadAuthMode == UploadAuthDual || c.UploadAuthMode == UploadAuthLegacy
 }
 
 func env(key, def string) string {

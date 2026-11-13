@@ -141,7 +141,7 @@ npm run check:api -- --base=https://你的更新服务地址
 | 检查输出 | 原因 | 处理 |
 |---|---|---|
 | `HTTP 404 text/html` | 请求打到了静态托管（GitHub Pages 等），那里没有后端 | 构建时设 `VITE_API_BASE_URL=https://更新服务域名` 后重新构建部署；或改用 Nginx 同源反代 |
-| `latestVersionCode = 0` | 接口通了，但该 appKey 还没有发布记录（或该渠道的 release 都被下架了） | 推 tag 触发 `release.yml` 上传；并确认 secrets 里配了 `UPDATE_SERVER_URL` / `SCHEDULE_UPLOAD_KEY`（未配会打 warning 直接跳过；旧 `UPDATE_SERVER_API_KEY` 仅迁移兼容） |
+| `latestVersionCode = 0` | 接口通了，但该 appKey 还没有发布记录（或该渠道的 release 都被下架了） | 推 tag 触发 `release.yml` 上传；并确认 secrets 里配了 `UPDATE_SERVER_URL` / `SCHEDULE_UPLOAD_KEY`（未配会打 warning 直接跳过） |
 | 缺 `Access-Control-Allow-Origin` | 后端没放行官网域名 | 后端 `.env` 设 `CORS_ALLOW_ORIGINS=https://官网域名` 后重启服务 |
 | 接口不通 / 超时 | 后端没起、域名写错、被限流 | 本地先 `cd website && go run .`；确认 `RATE_LIMIT_RPS` 不是太小 |
 

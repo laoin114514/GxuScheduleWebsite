@@ -70,13 +70,8 @@ func New(cfg *config.Config, h *handler.Handler) *gin.Engine {
 		log.Printf("static web hosting disabled (WEB_DIR=%q)，/ 只会返回 404", cfg.WebDir)
 	}
 
-	// authMode 用于线上快速确认当前处于 scoped/dual/legacy 哪个迁移阶段。
 	r.GET("/healthz", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status":   "ok",
-			"web":      webEnabled,
-			"authMode": cfg.UploadAuthMode,
-		})
+		c.JSON(http.StatusOK, gin.H{"status": "ok", "web": webEnabled})
 	})
 
 	return r

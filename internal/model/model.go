@@ -79,8 +79,8 @@ type Release struct {
 	Changelog   string `gorm:"type:text"`
 	Forced      bool   `gorm:"not null;default:false;comment:强制更新"`
 	Status      int8   `gorm:"not null;default:1;index:idx_app_status_version,priority:2;comment:1 live 2 yanked"`
-	// UploadKeyID 本次上传所用 app_upload_keys.id；legacy 全局 key 为 0。
-	UploadKeyID uint `gorm:"not null;default:0;comment:上传所用 app_upload_keys.id；legacy key 为 0"`
+	// UploadKeyID 本次上传所用 app_upload_keys.id。
+	UploadKeyID uint `gorm:"not null;default:0;comment:上传所用 app_upload_keys.id"`
 	YankedAt    *time.Time
 	YankedBy    string `gorm:"size:64;comment:下架操作者（admin）"`
 	YankReason  string `gorm:"size:255"`

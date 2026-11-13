@@ -23,7 +23,7 @@ func main() {
 		log.Fatalf("config: %v", err)
 	}
 	// 启动即回显鉴权模式与 admin key 数量，便于确认线上处于 scoped/dual/legacy 哪个阶段（绝不打印 key 内容）。
-	log.Printf("upload auth mode=%s, admin keys=%d", cfg.UploadAuthMode, len(cfg.AdminAPIKeys))
+	log.Printf("admin keys=%d", len(cfg.AdminAPIKeys))
 
 	db, err := database.New(cfg)
 	if err != nil {
